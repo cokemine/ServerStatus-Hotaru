@@ -580,7 +580,7 @@ Modify_ServerStatus_server_region(){
 	Set_username_num=$(cat -n ${server_conf}|grep '"username": "'"${manually_username}"'"'|awk '{print $1}')
 	if [[ ! -z ${Set_username_num} ]]; then
 		Set_region
-		Set_region_num_a=$(echo $((${Set_username_num}+5)))
+		Set_region_num_a=$(echo $((${Set_username_num}+7)))
 		Set_region_num_a_text=$(sed -n "${Set_region_num_a}p" ${server_conf}|sed 's/\"//g;s/,$//g'|awk -F ": " '{print $2}')
 		sed -i "${Set_region_num_a}"'s/"region": "'"${Set_region_num_a_text}"'"/"region": "'"${region_s}"'"/g' ${server_conf}
 		echo -e "${Info} 修改成功 [ 原节点区域: ${Set_region_num_a_text}, 新节点区域: ${region_s} ]"

@@ -15,7 +15,6 @@
 #ifndef PRId64
 	#define PRId64 "I64d"
 #endif
-ocation
 static volatile int gs_Running = 1;
 static volatile int gs_ReloadConfig = 0;
 

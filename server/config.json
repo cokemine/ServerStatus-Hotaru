@@ -1,0 +1,40 @@
+{"servers":
+	[
+		{
+			"username": "s01",
+			"password": "password",
+			"name": "Mainserver 1",
+			"type": "Dedicated Server",
+			"host": "No",
+			"location": "Austria",
+			"disabled": false
+		},
+		{
+			"username": "bs01",
+			"password": "password",
+			"name": "Backupserver 1",
+			"type": "Virtual Server",
+			"host": "No",
+			"location": "Switzerland",
+			"disabled": false
+		},
+		{
+			"username": "hidden",
+			"password": "password",
+			"name": "Secret",
+			"type": "Nothing",
+			"host": "No",
+			"location": "Nowhere",
+			"disabled": true
+		},
+		{
+			"username": "butt",
+			"password": "password"，
+			"name": "Butt",
+			"type": "Cloud Server",
+			"host": "No",
+			"location": "Heaven??!",
+			"disabled": false
+		}
+	]
+}

@@ -78,7 +78,7 @@ function uptime() {
                        ' <div class="panel panel-block panel-block-sm panel-location">'+
                             '<div class="location-header">'+
 
-                               ' <h3 class="h4"><img src="img/clients/@location.png"> @name <small>@type</small></h3>'+
+                               ' <h3 class="h4"><img src="img/clients/@region.png"> @name <small>@type</small></h3>'+
                              '   <i class="zmdi zmdi-check-circle @online"></i>'+
                          '   </div>'+
                           '  <div class="location-progress">'+
@@ -120,7 +120,7 @@ function uptime() {
 				else
 					newnetstr += (result.servers[i].network_tx/1000/1000).toFixed(1) + "M";
           
-          shinnerhtml+=shstr.replace("@name",result.servers[i].name).replace("@network_rxandnetwork_tx",newnetstr).replace("@type",result.servers[i].type).replace("@online",result.servers[i].online4?'text-success':'text-error').replace("@location",result.servers[i].location).replace("@load",result.servers[i].load).replace("@load",result.servers[i].load);
+          shinnerhtml+=shstr.replace("@name",result.servers[i].name).replace("@network_rxandnetwork_tx",newnetstr).replace("@type",result.servers[i].type).replace("@online",result.servers[i].online4?'text-success':'text-error').replace("@location",result.servers[i].location).replace("@load",result.servers[i].load).replace("@load",result.servers[i].load).replace("@region",result.servers[i].region);
           
           
           
@@ -194,6 +194,8 @@ function uptime() {
 
 			// Location
 			TableRow.children["location"].innerHTML = result.servers[i].location;
+			//Region
+			//TableRow.children["region"].innerHTML = result.servers[i].region;
 			if (!result.servers[i].online4 && !result.servers[i].online6) {
 				if (server_status[i]) {
 					TableRow.children["uptime"].innerHTML = "–";

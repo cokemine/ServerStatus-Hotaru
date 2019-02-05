@@ -479,7 +479,7 @@ Del_ServerStatus_server(){
 	del_username=`cat -n ${server_conf}|grep '"username": "'"${del_server_username}"'"'|awk '{print $1}'`
 	if [[ ! -z ${del_username} ]]; then
 		del_username_min=$(echo $((${del_username}-1)))
-		del_username_max=$(echo $((${del_username}+7)))
+		del_username_max=$(echo $((${del_username}+8)))
 		del_username_max_text=$(sed -n "${del_username_max}p" ${server_conf})
 		del_username_max_text_last=`echo ${del_username_max_text:((${#del_username_max_text} - 1))}`
 		if [[ ${del_username_max_text_last} != "," ]]; then

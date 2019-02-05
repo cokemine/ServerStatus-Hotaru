@@ -614,7 +614,7 @@ Modify_ServerStatus_server_all(){
 		Set_location_num_a=$(echo $((${Set_username_num}+5)))
 		Set_location_num_a_text=$(sed -n "${Set_location_num_a}p" ${server_conf}|sed 's/\"//g;s/,$//g'|awk -F ": " '{print $2}')
 		sed -i "${Set_location_num_a}"'s/"location": "'"${Set_location_num_a_text}"'"/"location": "'"${location_s}"'"/g' ${server_conf}
-		Set_region_num_a=$(echo $((${Set_username_num}+5)))
+		Set_region_num_a=$(echo $((${Set_username_num}+7)))
 		Set_region_num_a_text=$(sed -n "${Set_lregion_num_a}p" ${server_conf}|sed 's/\"//g;s/,$//g'|awk -F ": " '{print $2}')
 		sed -i "${Set_region_num_a}"'s/"region": "'"${Set_region_num_a_text}"'"/"region": "'"${region_s}"'"/g' ${server_conf}
 		echo -e "${Info} 修改成功。"

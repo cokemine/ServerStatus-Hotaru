@@ -333,7 +333,7 @@ Set_password(){
 }
 Set_name(){
 	echo -e "请输入 ServerStatus 服务端要设置的节点名称[name]（支持中文，前提是你的系统和SSH工具支持中文输入，仅仅是个名字）"
-	read -e -p "(默认: Server 01):" name_s
+	stty erase '^H' && read -p "(默认: Server 01):" name_s
 	[[ -z "$name_s" ]] && name_s="Server 01"
 	echo && echo "	================================================"
 	echo -e "	节点名称[name]: ${Red_background_prefix} ${name_s} ${Font_color_suffix}"
@@ -341,7 +341,7 @@ Set_name(){
 }
 Set_type(){
 	echo -e "请输入 ServerStatus 服务端要设置的节点虚拟化类型[type]（例如 OpenVZ / KVM）"
-	read -e -p "(默认: KVM):" type_s
+	stty erase '^H' && read -p "(默认: KVM):" type_s
 	[[ -z "$type_s" ]] && type_s="KVM"
 	echo && echo "	================================================"
 	echo -e "	虚拟化类型[type]: ${Red_background_prefix} ${type_s} ${Font_color_suffix}"
@@ -349,7 +349,7 @@ Set_type(){
 }
 Set_location(){
 	echo -e "请输入 ServerStatus 服务端要设置的节点位置[location]（支持中文，前提是你的系统和SSH工具支持中文输入）"
-	read -e -p "(默认: Hong Kong):" location_s
+	stty erase '^H' && read -p "(默认: Hong Kong):" location_s
 	[[ -z "$location_s" ]] && location_s="Hong Kong"
 	echo && echo "	================================================"
 	echo -e "	节点位置[location]: ${Red_background_prefix} ${location_s} ${Font_color_suffix}"

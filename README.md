@@ -15,7 +15,7 @@
 
 配置文件：/usr/local/ServerStatus/server/config.json备份并自行添加Region
 
-![](https://i.loli.net/2019/02/07/5c5bc46840786.png)
+![](https://i.loli.net/2019/02/07/5c5bca12df8b0.png)
 
 卸载ServerStatus-Toyo安装ServerStatus-Hotaru替换配置文件，重启ServerStatus
 

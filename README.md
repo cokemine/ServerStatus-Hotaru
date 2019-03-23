@@ -11,6 +11,10 @@
 
 多了个Region调用国旗。所以用原来Toyo版的需要稍作修改
 
+## 安装方法
+
+请见：https://www.cokemine.com/serverstatus-hotaru.html
+
 ## 修改方法
 
 配置文件：/usr/local/ServerStatus/server/config.json备份并自行添加Region

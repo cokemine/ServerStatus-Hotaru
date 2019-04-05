@@ -3,6 +3,8 @@
 
 基于ServerStatus-Toyo最新版本稍作修改，不太会脚本什么的，前端也垃圾。见谅
 
+Test v0.014：图片来源：Pixiv：72725286
+
 ## 特性
 
 模板来自：<https://www.hostloc.com/thread-494384-1-1.html>
@@ -25,7 +27,9 @@
 
 ## 效果演示
 
-![](https://i.loli.net/2019/02/05/5c59649522539.png)
+![](https://i.loli.net/2019/04/05/5ca74fb05338f.png)
+
+![](https://i.loli.net/2019/04/05/5ca74fc86db96.png)
 
 当然前端可以自己自定义。
 

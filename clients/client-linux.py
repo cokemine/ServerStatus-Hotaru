@@ -6,7 +6,7 @@
 
 SERVER = "127.0.0.1"
 PORT = 35601
-USER = "USER" 
+USER = "USER"
 PASSWORD = "USER_PASSWORD"
 INTERVAL = 1 #更新间隔
 
@@ -56,17 +56,20 @@ def get_hdd():
 	return int(size), int(used)
 
 def get_load():
-	system = platform.linux_distribution()
-	if system[0][:6] == "CentOS":
-		if system[1][0] == "6":
-			tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp |grep '::ffff:' |awk '{print $5}' |awk -F ':' '{print $4}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
-		else:
-			tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
-	else:
-		tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
-	
-	return float(tmp_load)
-	#return os.getloadavg()[0]
+	# system = platform.linux_distribution()
+	# if system[0][:6] == "CentOS":
+	# 	if system[1][0] == "6":
+	# 		tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp |grep '::ffff:' |awk '{print $5}' |awk -F ':' '{print $4}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
+	# 	else:
+	# 		tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
+	# else:
+	# 	tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
+
+	# return float(tmp_load)
+	load = (os.getloadavg()[0] / 2.00) * 100
+	if load > 100:
+	    load = 100
+	return load
 
 def get_time():
 	stat_file = file("/proc/stat", "r")

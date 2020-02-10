@@ -3789,6 +3789,9 @@ a.package:hover {
 .progress-bar-danger{
   background: #d9534f!important;
 }
+.progress-bar-warning{
+	background: #f0ad4e!important;
+}
 .location-btn {
   position: absolute;
   bottom: 0;

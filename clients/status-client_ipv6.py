@@ -136,10 +136,11 @@ def liuliang():
     return NET_IN, NET_OUT
 
 def get_network(ip_version):
-	if(ip_version == 4):
-		HOST = "ipv4.google.com"
-	elif(ip_version == 6):
-		HOST = "ipv6.google.com"
+	#if(ip_version == 4):
+	#	HOST = "ipv4.google.com"
+	#elif(ip_version == 6):
+	#	HOST = "ipv6.google.com"
+	HOST = "ipv6.google.com"
 	try:
 		s = socket.create_connection((HOST, 80), 2)
 		return True
@@ -192,7 +193,7 @@ if __name__ == '__main__':
 
 				array = {}
 				if not timer:
-					array['online' + str(check_ip)] = get_network(check_ip)
+					array['online4'] = get_network(check_ip) #Toyo修改时去掉了IPv6的在线状态
 					timer = 10
 				else:
 					timer -= 1*INTERVAL

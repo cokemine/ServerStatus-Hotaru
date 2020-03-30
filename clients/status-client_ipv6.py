@@ -62,10 +62,10 @@ def get_load():
 	# 	tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
 
 	# return float(tmp_load)
-	load = (os.getloadavg()[0] / 2.00) * 100
-	if load > 100:
-	    load = 100
-	return load
+	try:
+		return round(os.getloadavg()[0] * 2) / 2
+	except:
+		return -1.0
 
 def get_time():
 	stat_file = file("/proc/stat", "r")

@@ -78,7 +78,7 @@ function uptime() {
                        ' <div class="panel panel-block panel-block-sm panel-location">'+
                             '<div class="location-header">'+
 
-                               ' <h3 class="h4"><img src="img/clients/@region.png"> @name <small>@type</small></h3>'+
+                               ' <h3 class="h4"><img src="img/clients/@region.webp"> @name <small>@type</small></h3>'+
                              '   <i class="zmdi zmdi-check-circle @online"></i>'+
                          '   </div>'+
                           '  <div class="location-progress">'+

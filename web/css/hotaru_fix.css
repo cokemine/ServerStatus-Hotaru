@@ -3,11 +3,19 @@
 		background: url(../img/tenshi_1890x400.jpg) no-repeat;
 		background-size: 100%; 
 	}
+	body.dark .hotaru-cover {
+		background: url(../img/tenshi_1890x400_darkmode.jpg) no-repeat;
+		background-size: 100%; 
+	}
 }
 @media only screen and (max-width: 992px) {
 	#location, tr td:nth-child(4)		{ display:none; visibility:hidden; }
 	.hotaru-cover {
 		background: url(../img/tenshi_1890x400.jpg) no-repeat;
+		background-size: 100%; 
+	}
+	body.dark .hotaru-cover {
+		background: url(../img/tenshi_1890x400_darkmode.jpg) no-repeat;
 		background-size: 100%; 
 	}
 }
@@ -17,6 +25,10 @@
 	#uptime, tr td:nth-child(5)			{ display:none; visibility:hidden; }
 	.hotaru-cover {
 		background: url(../img/tenshi.jpg) no-repeat;
+		background-size: 100%; 
+	}
+	body.dark .hotaru-cover {
+		background: url(../img/tenshi_darkmode.jpg) no-repeat;
 		background-size: 100%; 
 	}
 }
@@ -29,6 +41,10 @@
 		background: url(../img/tenshi.jpg) no-repeat;
 		background-size: 100%; 
 	}
+	body.dark .hotaru-cover {
+		background: url(../img/tenshi_darkmode.jpg) no-repeat;
+		background-size: 100%; 
+	}
 }
 @media only screen and (max-width: 533px) {
 	#type, tr td:nth-child(3)			{ display:none; visibility:hidden; }
@@ -38,6 +54,10 @@
 	#load, tr td:nth-child(6)			{ display:none; visibility:hidden; }
 	.hotaru-cover {
 		background: url(../img/tenshi.jpg) no-repeat;
+		background-size: 100%; 
+	}
+	body.dark .hotaru-cover {
+		background: url(../img/tenshi_darkmode.jpg) no-repeat;
 		background-size: 100%; 
 	}
 }
@@ -53,6 +73,10 @@
 	#cpu, #ram { min-width: 20px; max-width: 40px; }
 	.hotaru-cover {
 		background: url(../img/tenshi.jpg) no-repeat;
+		background-size: 100%; 
+	}
+	body.dark .hotaru-cover {
+		background: url(../img/tenshi_darkmode.jpg) no-repeat;
 		background-size: 100%; 
 	}
 }

@@ -1,5 +1,8 @@
 body {
 	font-family: "Microsoft YaHei", 微软雅黑, 'icons';
+	position: relative;
+	z-index: 1;
+	background: url(../img/bg_key.png) no-repeat right top, url(../img/bg_parts.png) repeat-y left top, url(../img/bg.png) repeat left top;
 }
 
 a {

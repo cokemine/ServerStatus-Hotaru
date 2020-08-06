@@ -13,10 +13,6 @@ caddy_file="/usr/local/caddy/caddy"
 caddy_conf_file="/usr/local/caddy/Caddyfile"
 Info_font_prefix="\033[32m" && Error_font_prefix="\033[31m" && Info_background_prefix="\033[42;37m" && Error_background_prefix="\033[41;37m" && Font_suffix="\033[0m"
 
-get_latest_release_number(){
-	latest_ver=`curl --silent "https://github.com/caddyserver/caddy/releases/latest" | sed 's#.*tag/v\(.*\)".*#\1#'`
-}
-
 check_root(){
 	[[ $EUID != 0 ]] && echo -e "${Error} 当前非ROOT账号(或没有ROOT权限)，无法继续操作，请更换ROOT账号或使用 ${Green_background_prefix}sudo su${Font_color_suffix} 命令获取临时ROOT权限（执行后可能会提示输入当前账号的密码）。" && exit 1
 }
@@ -46,25 +42,17 @@ Download_caddy(){
 	cd "${file}"
 	PID=$(ps -ef |grep "caddy" |grep -v "grep" |grep -v "init.d" |grep -v "service" |grep -v "caddy_install" |awk '{print $2}')
 	[[ ! -z ${PID} ]] && kill -9 ${PID}
-	[[ -e "caddy_linux*.tar.gz" ]] && rm -rf "caddy_linux*.tar.gz"
-	get_latest_release_number
+	[[ -e "caddy*" ]] && rm -rf "caddy*"
 	if [[ ${bit} == "x86_64" ]]; then
-		wget --no-check-certificate -O "caddy_linux.tar.gz" "https://github.com/caddyserver/caddy/releases/latest/download/caddy_${latest_ver}_linux_amd64.tar.gz"
-	# elif [[ ${bit} == "i386" || ${bit} == "i686" ]]; then
-		# wget --no-check-certificate -O "caddy_linux.tar.gz" "https://github.com/caddyserver/caddy/releases/latest/download/" No i386 Support Anymore?
+		wget --no-check-certificate -O "caddy" "https://github.com/CokeMine/Caddy_Linux/releases/latest/download/caddy_v2_linux_amd64"
+	 elif [[ ${bit} == "i386" || ${bit} == "i686" ]]; then
+		 wget --no-check-certificate -O "caddy_linux.tar.gz" "https://github.com/CokeMine/Caddy_Linux/releases/latest/download/caddy_v2_linux_i386" 
 	elif [[ ${bit} == "armv7l" ]]; then
-		wget --no-check-certificate -O "caddy_linux.tar.gz" "https://github.com/caddyserver/caddy/releases/latest/download/caddy_${latest_ver}_linux_armv7.tar.gz"
+		wget --no-check-certificate -O "caddy_linux.tar.gz" "https://github.com/CokeMine/Caddy_Linux/releases/latest/download/caddy_v2_linux_arm7"
 	else
 		echo -e "${Error_font_prefix}[错误]${Font_suffix} 不支持 [${bit}] ! 请向本站反馈[]中的名称，我会看看是否可以添加支持。" && exit 1
 	fi
-	[[ ! -e "caddy_linux.tar.gz" ]] && echo -e "${Error_font_prefix}[错误]${Font_suffix} Caddy 下载失败 !" && exit 1
-	tar zxf "caddy_linux.tar.gz"
-	rm -rf "caddy_linux.tar.gz"
-	[[ ! -e ${caddy_file} ]] && echo -e "${Error_font_prefix}[错误]${Font_suffix} Caddy 解压失败或压缩文件错误 !" && exit 1
-	rm -rf LICENSES.txt
-	rm -rf README.txt 
-	rm -rf CHANGES.txt
-	rm -rf "init/"
+	[[ ! -e "caddy" ]] && echo -e "${Error_font_prefix}[错误]${Font_suffix} Caddy 下载失败 !" && exit 1
 	chmod +x caddy
 }
 Service_caddy(){

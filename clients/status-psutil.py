@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Update by : https://github.com/tenyue/ServerStatus
+# Update by: https://github.com/CokeMine/ServerStatus-Hotaru
 # 依赖于psutil跨平台库：
-# 支持Python版本：2.6 to 3.5 (users of Python 2.4 and 2.5 may use 2.1.3 version)
+# 支持Python版本：2.6 to 3.7
 # 支持操作系统： Linux, Windows, OSX, Sun Solaris, FreeBSD, OpenBSD and NetBSD, both 32-bit and 64-bit architectures
 
 SERVER = "127.0.0.1"
@@ -43,7 +43,7 @@ def get_hdd():
 	for disk in psutil.disk_partitions():
 		if not disk.device in disks and disk.fstype.lower() in valid_fs:
 			disks[disk.device] = disk.mountpoint
-	for disk in disks.itervalues():
+	for disk in disks.values():
 		usage = psutil.disk_usage(disk)
 		size += usage.total
 		used += usage.used
@@ -51,7 +51,7 @@ def get_hdd():
 
 def get_load():
 	try:
-		return os.getloadavg()[0]
+		return round(os.getloadavg()[0] * 2) / 2
 	except:
 		return -1.0
 
@@ -64,7 +64,7 @@ class Traffic:
 		self.tx = collections.deque(maxlen=10)
 	def get(self):
 		avgrx = 0; avgtx = 0
-		for name, stats in psutil.net_io_counters(pernic=True).iteritems():
+		for name, stats in psutil.net_io_counters(pernic=True).items():
 			if name == "lo" or name.find("tun") > -1:
 				continue
 			avgrx += stats.bytes_recv
@@ -115,10 +115,10 @@ if __name__ == '__main__':
 			print("Connecting...")
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.connect((SERVER, PORT))
-			data = s.recv(1024)
+			data = s.recv(1024).decode()
 			if data.find("Authentication required") > -1:
-				s.send(USER + ':' + PASSWORD + '\n')
-				data = s.recv(1024)
+				s.send((USER + ':' + PASSWORD + '\n').encode("utf-8"))
+				data = s.recv(1024).decode()
 				if data.find("Authentication successful") < 0:
 					print(data)
 					raise socket.error
@@ -127,7 +127,7 @@ if __name__ == '__main__':
 				raise socket.error
 
 			print(data)
-			data = s.recv(1024)
+			data = s.recv(1024).decode()
 			print(data)
 
 			timer = 0
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 				array['network_in'] = NET_IN
 				array['network_out'] = NET_OUT
 
-				s.send("update " + json.dumps(array) + "\n")
+				s.send(("update " + json.dumps(array) + "\n").encode("utf-8"))
 		except KeyboardInterrupt:
 			raise
 		except socket.error:

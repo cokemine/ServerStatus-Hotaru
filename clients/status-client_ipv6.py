@@ -1,4 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
+# Support Python Version 2.7 to 3.7
+# Update by: https://github.com/CokeMine/ServerStatus-Hotaru
 
 SERVER = "127.0.0.1"
 PORT = PORT
@@ -52,16 +54,6 @@ def get_hdd():
 	return int(size), int(used)
 
 def get_load():
-	# system = platform.linux_distribution()
-	# if system[0][:6] == "CentOS":
-	# 	if system[1][0] == "6":
-	# 		tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp |grep '::ffff:' |awk '{print $5}' |awk -F ':' '{print $4}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
-	# 	else:
-	# 		tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
-	# else:
-	# 	tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' |wc -l").read()
-
-	# return float(tmp_load)
 	try:
 		return round(os.getloadavg()[0] * 2) / 2
 	except:
@@ -155,10 +147,10 @@ if __name__ == '__main__':
 			print("Connecting...")
 			s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 			s.connect((SERVER, PORT))
-			data = s.recv(1024)
+			data = s.recv(1024).decode()
 			if data.find("Authentication required") > -1:
-				s.send(USER + ':' + PASSWORD + '\n')
-				data = s.recv(1024)
+				s.send((USER + ':' + PASSWORD + '\n').encode("utf-8"))
+				data = s.recv(1024).decode()
 				if data.find("Authentication successful") < 0:
 					print(data)
 					raise socket.error
@@ -167,7 +159,7 @@ if __name__ == '__main__':
 				raise socket.error
 
 			print(data)
-			data = s.recv(1024)
+			data = s.recv(1024).decode()
 			print(data)
 
 			timer = 0
@@ -212,7 +204,7 @@ if __name__ == '__main__':
 				array['network_in'] = NET_IN
 				array['network_out'] = NET_OUT
 
-				s.send("update " + json.dumps(array) + "\n")
+				s.send(("update " + json.dumps(array) + "\n").encode("utf-8"))
 		except KeyboardInterrupt:
 			raise
 		except socket.error:

@@ -13,6 +13,8 @@ Test v0.022：头图来源：Pixiv：72725286
 
 稍作修改，多了个Region调用国家/地区旗帜。
 
+客户端支持Python版本：Python2.7 - Python3.7
+
 ## 安装方法
 
 请见：https://www.cokemine.com/serverstatus-hotaru.html
@@ -54,32 +56,44 @@ bash status.sh c
 ## 手动安装服务端
 
 ```
+apt install wget unzip curl make build-essential
 wget https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip
 unzip master.zip
 cd /root/ServerStatus-Hotaru-master/server
-make
+make #手动编译生成二进制文件
+chmod +x sergate
 vim config.json #修改配置文件
-cp -r ../web/* /home/wwwroot/ #此为站点根目录
-./sergate --config=config.json --web-dir=/home/wwwroot
+cp -r ../web/* /home/wwwroot/public #此为站点根目录，请自行设置
+./sergate --config=config.json --web-dir=/home/wwwroot/public
 ```
 
 ## Psutil版
 
-使用Psutil版即可使ServerStatus在Windows等平台运行
+使用Psutil版即可使ServerStatus客户端在Windows等平台运行
 
 ```
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py ::若未安装pip
 python get-pip.py
 python pip install psutil
 %修改status-psutil.py%
 python status-psutil.py
 ```
 
+Linux：
+
+```
+apt install python3 python3-pip wget
+pip3 install psutil
+wget https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/clients/status-psutil.py
+vim status-psutil.py #修改客户端配置文件
+python3 status-psutil.py
+```
+
 ## Darkmode
 
-前端已支持Darkmode，点击页面右下角小图标即可切换Darkmode（样式可能不尽如人意，各位有更好的样式或实现方法欢迎提交PR）
+前端已支持Darkmode，点击页面右下角小图标即可切换Darkmode（样式可能不尽如人意，各位有更好的样式或实现方法欢迎提交PR）默认不开启。
 
-如何关闭Darkmode（按钮都不想要）：注释掉index.html第99行即可
+如何启动Darkmode：去掉index.html第99行注释即可
 
 ## 效果演示
 

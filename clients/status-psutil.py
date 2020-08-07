@@ -85,16 +85,16 @@ class Traffic:
 		return avgrx, avgtx
 
 def liuliang():
-	NET_IN = 0
-	NET_OUT = 0
-	vnstat=os.popen('vnstat --dumpdb').readlines()
-	for line in vnstat:
-		if line[0:4] == "m;0;":
-			mdata=line.split(";")
-			NET_IN=int(mdata[3])*1024*1024
-			NET_OUT=int(mdata[4])*1024*1024
-			break
-	return NET_IN, NET_OUT
+    NET_IN = 0
+    NET_OUT = 0
+    net = psutil.net_io_counters(pernic=True)
+    for k, v in net.items():
+        if 'lo' in k or 'tun' in k: 
+            continue
+        else:
+            NET_IN += v[1]
+            NET_OUT += v[0]
+    return NET_IN, NET_OUT
 
 def get_network(ip_version):
 	if(ip_version == 4):

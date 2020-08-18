@@ -487,8 +487,7 @@ mark, .mark {
 }
 
 .text-nowrap {
-  white-space: nowrap;
-  !important
+  white-space: nowrap!important;
 }
 
 .text-lowercase {

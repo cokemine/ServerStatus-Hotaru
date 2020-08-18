@@ -10,3 +10,4 @@ function switchDarkMode() {
         console.log('Dark mode off');
     }
 }
+$("#darkmodeButton").click(switchDarkMode);

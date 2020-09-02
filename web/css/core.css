@@ -1714,7 +1714,7 @@ th {
   background-color: #f9f9f9;
 }
 
-.collapse {
+.collapsed {
   /* display: none; */
   height: 0px;
   overflow: hidden;

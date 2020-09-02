@@ -17,7 +17,7 @@ body.dark #darkmodeButton {
 }
 
 body.dark {
-    background: #263236!important;
+    background: #263236;
     color: #aaa;
 }
 
@@ -42,5 +42,5 @@ body.dark .panel h3, body.dark .panel span {
     color: #aaa;
 }
 body.dark .page-section {
-    border-bottom: 1px solid #212f36!important;
+    border-bottom: 1px solid #212f36;
 }

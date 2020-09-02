@@ -65,7 +65,7 @@ function uptime() {
                     var TableRowNode = document.createElement("tr");
                     var ExpandRowNode = document.createElement("tr");
                     TableRowNode.id = "r" + i;
-                    TableRowNode.className = "accordion-toggle " + hack;
+                    TableRowNode.className = "tableRow " + hack;
                     TableRowNode.innerHTML = "<td id=\"online4\"><div class=\"progress\"><div style=\"width: 100%;\" class=\"progress-bar progress-bar-warning\"><small>加载中</small></div></div></td>" +
                         "<td id=\"name\">加载中</td>" +
                         "<td id=\"type\">加载中</td>" +
@@ -79,7 +79,7 @@ function uptime() {
                         "<td id=\"memory\"><div class=\"progress progress-striped active\"><div style=\"width: 100%;\" class=\"progress-bar progress-bar-warning\"><small>加载中</small></div></div></td>" +
                         "<td id=\"hdd\"><div class=\"progress progress-striped active\"><div style=\"width: 100%;\" class=\"progress-bar progress-bar-warning\"><small>加载中</small></div></div></td>"
                     ExpandRowNode.className = "expandRow " + hack;
-                    ExpandRowNode.innerHTML = "<td colspan=\"12\"><div class=\"accordian-body collapse\" id=\"rt" + i + "\">" +
+                    ExpandRowNode.innerHTML = "<td colspan=\"12\"><div class=\"collapsed\" id=\"rt" + i + "\">" +
                         "<div id=\"expand_mem\">加载中</div>" +
                         "<div id=\"expand_swap\">加载中</div>" +
                         "<div id=\"expand_hdd\">加载中</div>" +
@@ -140,15 +140,10 @@ function uptime() {
                         server_status[i] = false;
                     }
                 } else {
-                    let j = i;
                     TableRow.onclick = function () {
-                        ExpandRow = document.querySelector("#servers #rt" + j);
+                        var rowId = this.id.match(/\d/g);
+                        ExpandRow = document.querySelector("#servers #rt" + rowId);
                         toggleCollapse(ExpandRow);
-                    }
-
-                    if (!server_status[i]) {
-                        TableRow.setAttribute("data-target", "#rt" + i);
-                        server_status[i] = true;
                     }
 
                     // Uptime
@@ -322,10 +317,28 @@ function timeSince(date) {
 function updateTime() {
     if (!error) document.getElementById("updated").innerHTML = "最后更新: " + timeSince(d);
 }
+
 //折叠
 function toggleCollapse(row) {
-    if(row.offsetHeight) ExpandRowMove(row,"height",0,20);
-        else ExpandRowMove(row,"height",49,20);
+    if (row.offsetHeight) ExpandRowMove(row, "height", 0, 3);
+    else ExpandRowMove(row, "height", 49, 3);
+}
+function ExpandRowMove(obj, attr, target, speed, callback) {
+    clearInterval(obj.timer);
+    var current = parseInt(getComputedStyle(obj, null)[attr]);
+    if (current > target) {
+        speed = -speed;
+    }
+    obj.timer = setInterval(function () {
+        var oldVal = parseInt(getComputedStyle(obj, null)[attr]);
+        var newVal = oldVal + speed;
+        if ((speed < 0 && newVal < target) || (speed > 0 && newVal > target)) newVal = target;
+        obj.style[attr] = newVal + "px";
+        if (newVal == target) {
+            clearInterval(obj.timer);
+            callback && callback();
+        }
+    }, 15);
 }
 //单位转换
 function bytesToSize(bytes, precision, si) {
@@ -381,21 +394,4 @@ if (document.getElementById("darkmodeButton")) {
             console.log('Dark mode off');
         }
     }
-}
-function ExpandRowMove(obj, attr, target, speed, callback) {
-    clearInterval(obj.timer);
-    var current = parseInt(getComputedStyle(obj, null)[attr]);
-    if(current > target) {
-        speed = -speed;
-    }
-    obj.timer = setInterval(function() {
-        var oldVal = parseInt(getComputedStyle(obj, null)[attr]);
-        var newVal = oldVal + speed;
-        if((speed < 0 && newVal < target) || (speed > 0 && newVal > target)) newVal = target;
-        obj.style[attr] = newVal + "px";
-        if(newVal == target) {
-            clearInterval(obj.timer);
-            callback && callback();
-        }
-    }, 15);
 }

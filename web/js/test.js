@@ -324,9 +324,8 @@ function updateTime() {
 }
 //折叠
 function toggleCollapse(row) {
-    var reg = new RegExp("\\bin\\b");
-    if (!reg.test(row.className)) row.className += " in";
-    else row.className = row.className.replace(reg, "");
+    if(row.offsetHeight) ExpandRowMove(row,"height",0,20);
+        else ExpandRowMove(row,"height",49,20);
 }
 //单位转换
 function bytesToSize(bytes, precision, si) {
@@ -382,4 +381,21 @@ if (document.getElementById("darkmodeButton")) {
             console.log('Dark mode off');
         }
     }
+}
+function ExpandRowMove(obj, attr, target, speed, callback) {
+    clearInterval(obj.timer);
+    var current = parseInt(getComputedStyle(obj, null)[attr]);
+    if(current > target) {
+        speed = -speed;
+    }
+    obj.timer = setInterval(function() {
+        var oldVal = parseInt(getComputedStyle(obj, null)[attr]);
+        var newVal = oldVal + speed;
+        if((speed < 0 && newVal < target) || (speed > 0 && newVal > target)) newVal = target;
+        obj.style[attr] = newVal + "px";
+        if(newVal == target) {
+            clearInterval(obj.timer);
+            callback && callback();
+        }
+    }, 15);
 }

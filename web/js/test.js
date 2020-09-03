@@ -140,12 +140,14 @@ function uptime() {
                         server_status[i] = false;
                     }
                 } else {
-                    TableRow.onclick = function () {
-                        var rowId = this.id.match(/\d/g);
-                        ExpandRow = document.querySelector("#servers #rt" + rowId);
-                        toggleCollapse(ExpandRow);
-                    }
-
+                    //collapse
+                    (function (rowId) {
+                        TableRow.onclick = function () {
+                            // var rowId = this.id.match(/\d/g);
+                            ExpandRow = document.querySelector("#servers #rt" + rowId);
+                            toggleCollapse(ExpandRow);
+                        }
+                    })(i);
                     // Uptime
                     TableRow.children["uptime"].innerHTML = result.servers[i].uptime;
 

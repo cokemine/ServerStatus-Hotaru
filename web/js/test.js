@@ -123,7 +123,6 @@ function uptime() {
                 //Region
                 //TableRow.children["region"].innerHTML = result.servers[i].region;
                 if (!result.servers[i].online4 && !result.servers[i].online6) {
-                    if (server_status[i]) {
                         TableRow.children["uptime"].innerHTML = "–";
                         TableRow.children["load"].innerHTML = "–";
                         TableRow.children["network"].innerHTML = "–";
@@ -138,7 +137,6 @@ function uptime() {
                         TableRow.children["hdd"].children[0].children[0].style.width = "100%";
                         TableRow.children["hdd"].children[0].children[0].innerHTML = "<small>维护中</small>";
                         server_status[i] = false;
-                    }
                 } else {
                     //collapse
                     (function (rowId) {
@@ -249,8 +247,8 @@ function uptime() {
             d = new Date(result.updated * 1000);
             error = 0;
         } else {
-            document.querySelectorAll("#servers > tr.accordion-toggle").forEach(function (val, i) {
-                var TableRow = document.querySelector("#servers tr#r" + i);
+            document.querySelectorAll("#servers > tr.tableRow").forEach(function (TableRow, i) {
+                TableRow.onclick = null;
                 // var ExpandRow = document.querySelector("#servers #rt" + i);
                 TableRow.children["online4"].children[0].children[0].className = "progress-bar progress-bar-error";
                 TableRow.children["online4"].children[0].children[0].innerHTML = "<small>错误</small>";
@@ -269,8 +267,10 @@ function uptime() {
                 TableRow.children["hdd"].children[0].children[0].className = "progress-bar progress-bar-error";
                 TableRow.children["hdd"].children[0].children[0].style.width = "100%";
                 TableRow.children["hdd"].children[0].children[0].innerHTML = "<small>错误</small>";
-                TableRow.setAttribute("data-target", "");
                 server_status[i] = false;
+            });
+            document.querySelectorAll("div.collapsed").forEach(function(expandRow, i) {
+                if(expandRow.offsetHeight) expandRow.style.height = "0px";
             });
             error = 1;
             document.getElementById("updated").innerHTML = "更新错误";
@@ -284,7 +284,7 @@ function getJSON(callback) {
     request.open("get", url);
     request.send(null);
     request.onload = function () {
-        var result = 0;
+        var result = null;
         if (request.status == 200) result = JSON.parse(request.responseText);
         callback(result);
     }

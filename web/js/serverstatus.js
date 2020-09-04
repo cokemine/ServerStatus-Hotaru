@@ -9,6 +9,7 @@ setInterval(updateTime, 500);
 
 function uptime() {
     getJSON(function (result) {
+        if(result.reload) setTimeout(function() { location.reload(true) }, 1000);
         if (result) {
             console.log(result);
             //下方卡片
@@ -136,7 +137,9 @@ function uptime() {
                     TableRow.children["hdd"].children[0].children[0].className = "progress-bar progress-bar-danger";
                     TableRow.children["hdd"].children[0].children[0].style.width = "100%";
                     TableRow.children["hdd"].children[0].children[0].innerHTML = "<small>维护中</small>";
+                    TableRow.onclick = null;
                     server_status[i] = false;
+                    if(ExpandRow.offsetHeight) ExpandRow.style.height = "0px";
                 } else {
                     //collapse
                     (function (rowId) {
@@ -268,9 +271,6 @@ function uptime() {
                 TableRow.children["hdd"].children[0].children[0].style.width = "100%";
                 TableRow.children["hdd"].children[0].children[0].innerHTML = "<small>错误</small>";
                 server_status[i] = false;
-            });
-            document.querySelectorAll("div.collapsed").forEach(function (expandRow, i) {
-                if (expandRow.offsetHeight) expandRow.style.height = "0px";
             });
             error = 1;
             document.getElementById("updated").innerHTML = "更新错误";

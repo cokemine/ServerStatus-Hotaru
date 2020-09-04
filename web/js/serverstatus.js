@@ -9,7 +9,7 @@ setInterval(updateTime, 500);
 
 function uptime() {
     getJSON(function (result) {
-        if(result.reload) setTimeout(function() { location.reload(true) }, 1000);
+        if (result.reload) setTimeout(function () { location.reload(true) }, 1000);
         if (result) {
             console.log(result);
             //下方卡片
@@ -80,7 +80,7 @@ function uptime() {
                         "<td id=\"memory\"><div class=\"progress progress-striped active\"><div style=\"width: 100%;\" class=\"progress-bar progress-bar-warning\"><small>加载中</small></div></div></td>" +
                         "<td id=\"hdd\"><div class=\"progress progress-striped active\"><div style=\"width: 100%;\" class=\"progress-bar progress-bar-warning\"><small>加载中</small></div></div></td>"
                     ExpandRowNode.className = "expandRow " + hack;
-                    ExpandRowNode.innerHTML = "<td colspan=\"12\"><div class=\"collapsed\" id=\"rt" + i + "\">" +
+                    ExpandRowNode.innerHTML = "<td colspan=\"12\"><div class=\"overflow collapsed\" id=\"rt" + i + "\">" +
                         "<div id=\"expand_mem\">加载中</div>" +
                         "<div id=\"expand_swap\">加载中</div>" +
                         "<div id=\"expand_hdd\">加载中</div>" +
@@ -139,7 +139,7 @@ function uptime() {
                     TableRow.children["hdd"].children[0].children[0].innerHTML = "<small>维护中</small>";
                     TableRow.onclick = null;
                     server_status[i] = false;
-                    if(ExpandRow.offsetHeight) ExpandRow.style.height = "0px";
+                    if (ExpandRow.offsetHeight) ExpandRow.style.height = "0px";
                 } else {
                     //collapse
                     (function (rowId) {
@@ -322,8 +322,18 @@ function updateTime() {
 
 //折叠
 function toggleCollapse(row) {
-    if (row.offsetHeight) ExpandRowMove(row, "height", 0, 3);
-    else ExpandRowMove(row, "height", 49, 3);
+    var beginHeight = row.offsetHeight;
+    toggleClass(row);
+    var endHeight = row.offsetHeight;
+    row.style.height = beginHeight + "px";
+    ExpandRowMove(row, "height", endHeight, 3, function () {
+        row.style.height = "";
+    });
+}
+function toggleClass(row) {
+    var reg = new RegExp("\\b collapsed\\b");
+    if (!reg.test(row.className)) row.className += " collapsed";
+    else row.className = row.className.replace(reg, "");
 }
 function ExpandRowMove(obj, attr, target, speed, callback) {
     clearInterval(obj.timer);

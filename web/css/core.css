@@ -1720,6 +1720,10 @@ th {
   overflow: hidden;
 }
 
+.overflow {
+  overflow: hidden;
+}
+
 .progress {
   height: 25px;
   overflow: hidden;

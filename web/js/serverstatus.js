@@ -9,9 +9,9 @@ setInterval(updateTime, 500);
 
 function uptime() {
     getJSON(function (result) {
-        if (result.reload) setTimeout(function () { location.reload(true) }, 1000);
         if (result) {
             console.log(result);
+            if (result.reload) setTimeout(function () { location.reload(true) }, 1000);
             //下方卡片
             var shstr = '<div class="col-lg-4 col-md-4 col-sm-4">' +
                 ' <div class="panel panel-block panel-block-sm panel-location">' +
@@ -139,7 +139,7 @@ function uptime() {
                     TableRow.children["hdd"].children[0].children[0].innerHTML = "<small>维护中</small>";
                     TableRow.onclick = null;
                     server_status[i] = false;
-                    if (ExpandRow.offsetHeight) ExpandRow.style.height = "0px";
+                    if (ExpandRow.offsetHeight) ExpandRow.className += " collapsed";
                 } else {
                     //collapse
                     (function (rowId) {

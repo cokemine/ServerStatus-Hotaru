@@ -1,8 +1,29 @@
 // serverstatus.js
 // var result = null;
+/** @typedef {Object} json
+ * @property {Array} servers
+ *  @param servers[].memory_used
+ *  @param servers[].memory_total
+ *  @param servers[].swap_total
+ *  @param servers[].swap_used
+ *  @param servers[].network_rx
+ *  @param servers[].network_tx
+ *  @param servers[].online4
+ *  @param servers[].online6
+ *  @param servers[].network_in
+ *  @param servers[].network_out
+ *  @param servers[].hdd_used
+ *  @param servers[].hdd_total
+ *  @param servers[].cpu
+ *  @param servers[].uptime
+ *  @param servers[].custom
+ * @property {String} updated
+ */
+
+
 var error = 0;
 var d = 0;
-var server_status = new Array();
+var server_status = [];
 uptime();
 setInterval(uptime, 2000);
 setInterval(updateTime, 500);
@@ -11,13 +32,14 @@ function uptime() {
     getJSON(function (result) {
         if (result) {
             console.log(result);
-            if (result.reload) setTimeout(function () { location.reload(true) }, 1000);
+            if (result.reload) setTimeout(function () {
+                location.reload();
+            }, 1000);
             //下方卡片
             var shstr = '<div class="col-lg-4 col-md-4 col-sm-4">' +
                 ' <div class="panel panel-block panel-block-sm panel-location">' +
                 '<div class="location-header">' +
-
-                ' <h3 class="h4"><img src="img/clients/@region.png"> @name <small>@type</small></h3>' +
+                ' <h3 class="h4"><img src="img/clients/@region.png" alt="@region"> @name <small>@type</small></h3>' +
                 '   <i class="zmdi zmdi-check-circle @online"></i>' +
                 '   </div>' +
                 '  <div class="location-progress">' +
@@ -33,27 +55,13 @@ function uptime() {
                 ' </div>';
             var shinnerhtml = '';
             var loadingNotice = document.getElementById("loading-notice");
-            if (loadingNotice) loadingNotice.parentNode.removeChild(loadingNotice);
-            for (var i = 0; i < result.servers.length; i++) {
+            loadingNotice && loadingNotice.parentNode.removeChild(loadingNotice);
+            for (var i = 0, length = result.servers.length; i < length; i++) {
                 //Cards Start
                 // Memory
                 var Mem = ((result.servers[i].memory_used / result.servers[i].memory_total) * 100.0).toFixed(0);
                 // Network
-                var newnetstr = "";
-                if (result.servers[i].network_rx < 1000)
-                    newnetstr += result.servers[i].network_rx.toFixed(0) + "B";
-                else if (result.servers[i].network_rx < 1000 * 1000)
-                    newnetstr += (result.servers[i].network_rx / 1000).toFixed(0) + "K";
-                else
-                    newnetstr += (result.servers[i].network_rx / 1000 / 1000).toFixed(1) + "M";
-                newnetstr += " | "
-                if (result.servers[i].network_tx < 1000)
-                    newnetstr += result.servers[i].network_tx.toFixed(0) + "B";
-                else if (result.servers[i].network_tx < 1000 * 1000)
-                    newnetstr += (result.servers[i].network_tx / 1000).toFixed(0) + "K";
-                else
-                    newnetstr += (result.servers[i].network_tx / 1000 / 1000).toFixed(1) + "M";
-
+                var newnetstr = createNetworkStr(result.servers[i].network_rx) + " | " + createNetworkStr(result.servers[i].network_tx);
                 shinnerhtml += shstr.replace("@name", result.servers[i].name).replace("@network_rxandnetwork_tx", newnetstr).replace("@type", result.servers[i].type).replace("@online", result.servers[i].online4 ? 'text-success' : 'text-error').replace("@location", result.servers[i].location).replace("@Mem", Mem).replace("@load", result.servers[i].load).replace("@region", result.servers[i].region);
                 //Cards End
                 //Table Start
@@ -142,64 +150,28 @@ function uptime() {
                     if (ExpandRow.offsetHeight) ExpandRow.className += " collapsed";
                 } else {
                     //collapse
-                    (function (rowId) {
-                        TableRow.onclick = function () {
-                            // var rowId = this.id.match(/\d/g);
-                            ExpandRow = document.querySelector("#servers #rt" + rowId);
-                            toggleCollapse(ExpandRow);
+                    (function (i) {
+                            TableRow.onclick = function () {
+                                var ExpandRow = document.querySelector("#servers #rt" + i);
+                                toggleCollapse(ExpandRow);
+                            }
                         }
-                    })(i);
+                    )(i)
                     // Uptime
                     TableRow.children["uptime"].innerHTML = result.servers[i].uptime;
 
                     // Load
-                    if (result.servers[i].load == -1) {
+                    if (result.servers[i].load === -1) {
                         TableRow.children["load"].innerHTML = "–";
                     } else {
                         TableRow.children["load"].innerHTML = result.servers[i].load;
                     }
 
                     // Network
-                    var netstr = "";
-                    if (result.servers[i].network_rx < 1000)
-                        netstr += result.servers[i].network_rx.toFixed(0) + "B";
-                    else if (result.servers[i].network_rx < 1000 * 1000)
-                        netstr += (result.servers[i].network_rx / 1000).toFixed(0) + "K";
-                    else
-                        netstr += (result.servers[i].network_rx / 1000 / 1000).toFixed(1) + "M";
-                    netstr += " | "
-                    if (result.servers[i].network_tx < 1000)
-                        netstr += result.servers[i].network_tx.toFixed(0) + "B";
-                    else if (result.servers[i].network_tx < 1000 * 1000)
-                        netstr += (result.servers[i].network_tx / 1000).toFixed(0) + "K";
-                    else
-                        netstr += (result.servers[i].network_tx / 1000 / 1000).toFixed(1) + "M";
-                    TableRow.children["network"].innerHTML = netstr;
+                    TableRow.children["network"].innerHTML = createNetworkStr(result.servers[i].network_rx) + " | " + createNetworkStr(result.servers[i].network_tx);
 
                     //Traffic
-                    var trafficstr = "";
-                    if (result.servers[i].network_in < 1024)
-                        trafficstr += result.servers[i].network_in.toFixed(0) + "B";
-                    else if (result.servers[i].network_in < 1024 * 1024)
-                        trafficstr += (result.servers[i].network_in / 1024).toFixed(0) + "K";
-                    else if (result.servers[i].network_in < 1024 * 1024 * 1024)
-                        trafficstr += (result.servers[i].network_in / 1024 / 1024).toFixed(1) + "M";
-                    else if (result.servers[i].network_in < 1024 * 1024 * 1024 * 1024)
-                        trafficstr += (result.servers[i].network_in / 1024 / 1024 / 1024).toFixed(2) + "G";
-                    else
-                        trafficstr += (result.servers[i].network_in / 1024 / 1024 / 1024 / 1024).toFixed(2) + "T";
-                    trafficstr += " | "
-                    if (result.servers[i].network_out < 1024)
-                        trafficstr += result.servers[i].network_out.toFixed(0) + "B";
-                    else if (result.servers[i].network_out < 1024 * 1024)
-                        trafficstr += (result.servers[i].network_out / 1024).toFixed(0) + "K";
-                    else if (result.servers[i].network_out < 1024 * 1024 * 1024)
-                        trafficstr += (result.servers[i].network_out / 1024 / 1024).toFixed(1) + "M";
-                    else if (result.servers[i].network_out < 1024 * 1024 * 1024 * 1024)
-                        trafficstr += (result.servers[i].network_out / 1024 / 1024 / 1024).toFixed(2) + "G";
-                    else
-                        trafficstr += (result.servers[i].network_out / 1024 / 1024 / 1024 / 1024).toFixed(2) + "T";
-                    TableRow.children["traffic"].innerHTML = trafficstr;
+                    TableRow.children["traffic"].innerHTML = createTrafficStr(result.servers[i].network_in) + " | " + createTrafficStr(result.servers[i].network_out);
 
                     // CPU
                     if (result.servers[i].cpu >= 90)
@@ -212,7 +184,7 @@ function uptime() {
                     TableRow.children["cpu"].children[0].children[0].innerHTML = result.servers[i].cpu + "%";
 
                     // Memory
-                    //var Mem = ((result.servers[i].memory_used/result.servers[i].memory_total)*100.0).toFixed(0);
+                    //Mem = ((result.servers[i].memory_used/result.servers[i].memory_total)*100.0).toFixed(0);
                     if (Mem >= 90)
                         TableRow.children["memory"].children[0].children[0].className = "progress-bar progress-bar-danger";
                     else if (Mem >= 80)
@@ -239,9 +211,9 @@ function uptime() {
 
                     // Custom
                     if (result.servers[i].custom) {
-                        ExpandRow.children["expand_custom"].innerHTML = result.servers[i].custom
+                        ExpandRow.children["expand_custom"].innerHTML = result.servers[i].custom;
                     } else {
-                        ExpandRow.children["expand_custom"].innerHTML = ""
+                        ExpandRow.children["expand_custom"].innerHTML = "";
                     }
                 }
             }
@@ -285,18 +257,17 @@ function getJSON(callback) {
     request.send(null);
     request.onload = function () {
         var result = null;
-        if (request.status == 200) result = JSON.parse(request.responseText);
+        if (request.status === 200) result = JSON.parse(request.responseText);
         callback(result);
     }
 }
+
 //更新时间
 function timeSince(date) {
-    if (date == 0)
+    if (!date)
         return "从未.";
-
     var seconds = Math.floor((new Date() - date) / 1000);
     var interval = Math.floor(seconds / 31536000);
-
     if (interval > 1)
         return interval + " 年前.";
     interval = Math.floor(seconds / 2592000);
@@ -316,6 +287,7 @@ function timeSince(date) {
     else
         return "几秒前.";
 }
+
 function updateTime() {
     if (!error) document.getElementById("updated").innerHTML = "最后更新: " + timeSince(d);
 }
@@ -330,11 +302,13 @@ function toggleCollapse(row) {
         row.style.height = "";
     });
 }
+
 function toggleClass(row) {
     var reg = new RegExp("\\b collapsed\\b");
     if (!reg.test(row.className)) row.className += " collapsed";
     else row.className = row.className.replace(reg, "");
 }
+
 function ExpandRowMove(obj, attr, target, speed, callback) {
     clearInterval(obj.timer);
     var current = parseInt(getComputedStyle(obj, null)[attr]);
@@ -346,61 +320,82 @@ function ExpandRowMove(obj, attr, target, speed, callback) {
         var newVal = oldVal + speed;
         if ((speed < 0 && newVal < target) || (speed > 0 && newVal > target)) newVal = target;
         obj.style[attr] = newVal + "px";
-        if (newVal == target) {
+        if (newVal === target) {
             clearInterval(obj.timer);
             callback && callback();
         }
     }, 15);
 }
-//单位转换
+
+//Memory & Swap
 function bytesToSize(bytes, precision, si) {
     var ret;
     si = typeof si !== 'undefined' ? si : 0;
-    if (si != 0) {
-        var kilobyte = 1000;
-        var megabyte = kilobyte * 1000;
-        var gigabyte = megabyte * 1000;
-        var terabyte = gigabyte * 1000;
-    } else {
-        var kilobyte = 1024;
-        var megabyte = kilobyte * 1024;
-        var gigabyte = megabyte * 1024;
-        var terabyte = gigabyte * 1024;
+    var kilobyte = 1024;
+    var megabyte = kilobyte * 1024;
+    var gigabyte = megabyte * 1024;
+    var terabyte = gigabyte * 1024;
+    if (si) {
+        kilobyte = 1000;
+        megabyte = kilobyte * 1000;
+        gigabyte = megabyte * 1000;
+        terabyte = gigabyte * 1000;
     }
-
     if ((bytes >= 0) && (bytes < kilobyte)) {
         return bytes + ' B';
-
     } else if ((bytes >= kilobyte) && (bytes < megabyte)) {
         ret = (bytes / kilobyte).toFixed(precision) + ' K';
-
     } else if ((bytes >= megabyte) && (bytes < gigabyte)) {
         ret = (bytes / megabyte).toFixed(precision) + ' M';
-
     } else if ((bytes >= gigabyte) && (bytes < terabyte)) {
         ret = (bytes / gigabyte).toFixed(precision) + ' G';
-
     } else if (bytes >= terabyte) {
         ret = (bytes / terabyte).toFixed(precision) + ' T';
-
     } else {
         return bytes + ' B';
     }
-    if (si != 0) {
+    if (si) {
         return ret + 'B';
     } else {
         return ret + 'iB';
     }
 }
+
+function createNetworkStr(network) {
+    var str;
+    if (network < 1000)
+        str = network.toFixed(0) + "B";
+    else if (network < 1000 * 1000)
+        str = (network / 1000).toFixed(0) + "K";
+    else
+        str = (network / 1000 / 1000).toFixed(1) + "M";
+    return str;
+}
+
+function createTrafficStr(traffic) {
+    var str;
+    if (traffic < 1024)
+        str = traffic.toFixed(0) + "B";
+    else if (traffic < 1024 * 1024)
+        str = (traffic / 1024).toFixed(0) + "K";
+    else if (traffic < 1024 * 1024 * 1024)
+        str = (traffic / 1024 / 1024).toFixed(1) + "M";
+    else if (traffic < 1024 * 1024 * 1024 * 1024)
+        str = (traffic / 1024 / 1024 / 1024).toFixed(2) + "G";
+    else
+        str = (traffic / 1024 / 1024 / 1024 / 1024).toFixed(2) + "T";
+    return str;
+}
+
 //darkmode
 if (document.getElementById("darkmodeButton")) {
-    var night = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)dark\s*\=\s*([^;]*).*$)|^.*$/, "$1") || '0');
+    var night = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)dark\s*=\s*([^;]*).*$)|^.*$/, "$1") || '0');
     if (night) {
         document.body.classList.add('dark');
         console.log('Dark mode on', night);
     }
     document.getElementById("darkmodeButton").onclick = function () {
-        night = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)dark\s*\=\s*([^;]*).*$)|^.*$/, "$1") || '0');
+        night = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)dark\s*=\s*([^;]*).*$)|^.*$/, "$1") || '0');
         if (!night) {
             document.body.classList.add('dark');
             document.cookie = "dark=1";
@@ -412,6 +407,6 @@ if (document.getElementById("darkmodeButton")) {
         }
     }
 } else {
-    document.cookie = "dark=0";
+    document.cookie && (document.cookie = "");
     console.log('Darkmode not Support');
 }

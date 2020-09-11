@@ -21,7 +21,7 @@
     content: "";
   }
   pre, blockquote {
-    border: 1px solid #999;
+    border: 1px solid #999999;
     page-break-inside: avoid;
   }
   thead {
@@ -579,7 +579,7 @@ abbr[title], abbr[data-original-title] {
 blockquote {
   padding: 10px 20px;
   margin: 0 0 20px;
-  font-size: 17.5px;
+  font-size: 18px;
   border-left: 5px solid #eee;
 }
 
@@ -1431,7 +1431,7 @@ th {
 
 .collapsed {
   /* display: none; */
-  height: 0px;
+  height: 0;
   overflow: hidden;
 }
 

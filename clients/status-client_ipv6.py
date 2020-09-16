@@ -60,7 +60,7 @@ def get_load():
 		return -1.0
 
 def get_time():
-	stat_file = file("/proc/stat", "r")
+	stat_file = open("/proc/stat", "r")
 	time_list = stat_file.readline().split(' ')[2:6]
 	stat_file.close()
 	for i in range(len(time_list))  :

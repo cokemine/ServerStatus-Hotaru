@@ -57,6 +57,7 @@ function uptime() {
             var loadingNotice = document.getElementById("loading-notice");
             loadingNotice && loadingNotice.parentNode.removeChild(loadingNotice);
             for (var i = 0, length = result.servers.length; i < length; i++) {
+                if (result.servers[i].online6) result.servers[i].online4 = true;
                 //Cards Start
                 // Memory
                 var Mem = ((result.servers[i].memory_used / result.servers[i].memory_total) * 100.0).toFixed(0);

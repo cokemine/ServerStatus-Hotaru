@@ -166,11 +166,18 @@ Service_Server_Status_client() {
 Installation_dependency() {
   mode=$1
   [[ -z ${mode} ]] && mode="server"
+  if python --help >/dev/null 2>&1; then
+    python_status=1
+  elif python3 --help >/dev/null 2>&1; then
+    ln -s /usr/bin/python3 /usr/bin/python
+    python_status=2
+  else
+    python_status=0
+  fi
   if [[ ${mode} == "server" ]]; then
-    python_status=$(python --help >/dev/null 2>&1)
     if [[ ${release} == "centos" ]]; then
       yum -y update
-      if [[ -z ${python_status} ]]; then
+      if [ ${python_status} -eq 0 ]; then
         yum -y install python unzip vim make
         yum -y groupinstall "Development Tools"
       else
@@ -179,21 +186,20 @@ Installation_dependency() {
       fi
     else
       apt-get update -y
-      if [[ -z ${python_status} ]]; then
-        apt-get install -y python unzip vim build-essential make
+      if [ ${python_status} -eq 0 ]; then
+        apt-get -y install python unzip vim build-essential make
       else
-        apt-get install -y unzip vim build-essential make
+        apt-get -y install unzip vim build-essential make
       fi
     fi
   else
-    python_status=$(python --help >/dev/null 2>&1)
-    if [[ ${release} == "centos" ]]; then
-      if [[ -z ${python_status} ]]; then
+    if [ ${release} == "centos" ]; then
+      if [ "${python_status}" -eq 0 ]; then
         yum -y update
         yum -y install python
       fi
     else
-      if [[ -z ${python_status} ]]; then
+      if [ "${python_status}" -eq 0 ]; then
         apt-get -y update
         apt-get -y install python
       fi
@@ -253,7 +259,7 @@ Set_server() {
   [[ -z ${mode} ]] && mode="server"
   if [[ ${mode} == "server" ]]; then
     echo -e "请输入 ServerStatus 服务端中网站要设置的 域名[server]
-默认为本机IP为域名，例如输入: toyoo.pw ，如果要使用本机IP，请留空直接回车"
+默认为本机IP为域名，例如输入: toyoo.pw ，请注意，如果你的域名使用了CDN，请直接填写IP，如果要使用本机IP，请留空直接回车"
     read -e -r -p "(默认: 本机IP):" server_s
     [[ -z "$server_s" ]] && server_s=""
   else
@@ -751,8 +757,8 @@ Install_ServerStatus_client() {
   [[ -e "${client_file}/status-client.py" ]] && echo -e "${Error} 检测到 ServerStatus 客户端已安装 !" && exit 1
   check_sys
   if [[ ${release} == "centos" ]]; then
-    if [[ $(grep "7\..*" /etc/redhat-release | grep -i centos >/dev/null 2>&1) != 0 ]]; then
-      echo -e "${Info} 检测到你的系统为 CentOS6，该系统自带的 Python2.6 版本过低，会导致无法运行客户端，如果你有能力升级为 Python2.7，那么请继续(否则建议更换系统)：[y/N]"
+    if grep "7\..*" /etc/redhat-release | grep -i "centos" >/dev/null 2>&1; then
+      echo -e "${Info} 检测到你的系统为 CentOS6，该系统自带的 Python2.6 版本过低，会导致无法运行客户端，如果你有能力升级为 Python2.7或以上版本，那么请继续(否则建议更换系统)：[y/N]"
       read -e -r -p "(默认: N 继续安装):" sys_centos6
       [[ -z "$sys_centos6" ]] && sys_centos6="n"
       if [[ "${sys_centos6}" == [Nn] ]]; then
@@ -992,7 +998,7 @@ Update_Shell() {
 menu_client() {
   echo && echo -e "  ServerStatus 一键安装管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
   -- Toyo | doub.io/shell-jc3 --
-  --    Modify by CokeMine    --
+  --    Modified by APTX    --
  ${Green_font_prefix} 0.${Font_color_suffix} 升级脚本
  ————————————
  ${Green_font_prefix} 1.${Font_color_suffix} 安装 客户端
@@ -1071,7 +1077,7 @@ menu_client() {
 menu_server() {
   echo && echo -e "  ServerStatus 一键安装管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
   -- Toyo | doub.io/shell-jc3 --
-  --    Modify by CokeMine    --
+  --    Modified by APTX    --
  ${Green_font_prefix} 0.${Font_color_suffix} 升级脚本
  ————————————
  ${Green_font_prefix} 1.${Font_color_suffix} 安装 服务端

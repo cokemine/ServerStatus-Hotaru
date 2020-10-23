@@ -198,10 +198,16 @@ Installation_dependency() {
         yum -y update
         yum -y install python
       fi
+      if [[ ${isVnstat} == [Yy] ]]; then
+        yum -y install vnstat
+      fi
     else
       if [ "${python_status}" -eq 0 ]; then
         apt-get -y update
         apt-get -y install python
+      fi
+      if [[ ${isVnstat} == [Yy] ]]; then
+        apt-get -y install vnstat
       fi
     fi
   fi
@@ -259,11 +265,11 @@ Set_server() {
   [[ -z ${mode} ]] && mode="server"
   if [[ ${mode} == "server" ]]; then
     echo -e "请输入 ServerStatus 服务端中网站要设置的 域名[server]
-默认为本机IP为域名，例如输入: toyoo.pw ，请注意，如果你的域名使用了CDN，请直接填写IP，如果要使用本机IP，请留空直接回车"
+默认为本机IP为域名，例如输入: toyoo.pw ，如果要使用本机IP，请留空直接回车"
     read -e -r -p "(默认: 本机IP):" server_s
     [[ -z "$server_s" ]] && server_s=""
   else
-    echo -e "请输入 ServerStatus 服务端的 IP/域名[server]"
+    echo -e "请输入 ServerStatus 服务端的 IP/域名[server]，请注意，如果你的域名使用了CDN，请直接填写IP"
     read -e -r -p "(默认: 127.0.0.1):" server_s
     [[ -z "$server_s" ]] && server_s="127.0.0.1"
   fi
@@ -338,6 +344,11 @@ Set_password() {
   echo -e "	密码[password]: ${Red_background_prefix} ${password_s} ${Font_color_suffix}"
   echo "	================================================" && echo
 }
+Set_vnstat() {
+  echo -e "对于流量计算是否使用Vnstat每月自动清零？ [y/N]"
+  read -e -r -p "(默认: N):" isVnstat
+  [[ -z "$isVnstat" ]] && isVnstat="n"
+}
 Set_name() {
   echo -e "请输入 ServerStatus 服务端要设置的节点名称[name]（支持中文，前提是你的系统和SSH工具支持中文输入，仅仅是个名字）"
   stty erase '^H' && read -r -p "(默认: Server 01):" name_s
@@ -383,6 +394,7 @@ Set_config_client() {
   Set_server_port
   Set_username "client"
   Set_password "client"
+  Set_vnstat
 }
 Set_ServerStatus_server() {
   check_installed_server_status
@@ -657,6 +669,64 @@ Set_ServerStatus_client() {
   Add_iptables_OUT "${server_port_s}"
   Restart_ServerStatus_client
 }
+Modify_config_client_liuliang() {
+  if [[ ${isVnstat} == [Yy] ]]; then
+    if ! vnstat -v >/dev/null 2>&1; then
+      echo "Vnstat安装有误，请检查"
+      exit 1
+    else
+      netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
+      if [ -z "$netName" ]; then
+        echo "获取网卡名称失败，请在Github反馈"
+        exit 1
+      fi
+      if [[ $netName =~ [[:space:]] ]]; then
+        echo "检测到多个网卡: ${netName}，请手动输入网卡名称"
+        read -e -r netName
+      fi
+      read -e -r -p "请输入每月流量归零的日期(1~28)，默认为1(即每月1日): " time_N
+      [[ -z "$time_N" ]] && time_N="1"
+      while ! [[ $time_N =~ ^[0-9]*$ ]] || ((time_N < 1 || time_N > 28)); do
+        read -e -r -p "你输入的日期不合法，请重新输入: " time_N
+      done
+      sed -i "s/$(grep "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
+      chmod -R 777 /var/lib/vnstat/
+      vnstat -u -i "$netName"
+      sed -i "s/$(grep "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
+      service vnstat restart
+      if ! grep -q "vnstat" ${client_file}/status-client.py; then
+        sed -i 's/\t/    /g' ${client_file}/status-client.py
+        vnstat_py="\
+    NET_IN = 0\n\
+    NET_OUT = 0\n\
+    vnstat = os.popen('vnstat --oneline b').readline()\n\
+    mdata = vnstat.split(';')\n\
+    NET_IN = int(mdata[8])\n\
+    NET_OUT = int(mdata[9])\n\
+    return NET_IN, NET_OUT"
+        sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
+        sed -i "/def\ liuliang():/a\\$vnstat_py" ${client_file}/status-client.py
+      fi
+    fi
+  elif grep -q "vnstat" ${client_file}/status-client.py; then
+    sed -i 's/\t/    /g' ${client_file}/status-client.py
+    normal_py="\
+    NET_IN = 0\n\
+    NET_OUT = 0\n\
+    with open('/proc/net/dev') as f:\n\
+        for line in f.readlines():\n\
+            netinfo = re.findall('([^\\\s]+):[\\\s]{0,}(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)', line)\n\
+            if netinfo:\n\
+                if netinfo[0][0] == 'lo' or 'tun' in netinfo[0][0] or netinfo[0][1]=='0' or netinfo[0][9]=='0':\n\
+                    continue\n\
+                else:\n\
+                    NET_IN += int(netinfo[0][1])\n\
+                    NET_OUT += int(netinfo[0][9])\n\
+    return NET_IN, NET_OUT"
+    sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
+    sed -i "/def\ liuliang():/a\\$normal_py" ${client_file}/status-client.py
+  fi
+}
 Modify_config_client() {
   sed -i 's/SERVER = "'"${client_server}"'"/SERVER = "'"${server_s}"'"/g' "${client_file}/status-client.py"
   sed -i "s/PORT = ${client_port}/PORT = ${server_port_s}/g" "${client_file}/status-client.py"
@@ -672,7 +742,7 @@ Modify_config_client() {
   else
     sed -i 's/AF_INET6/AF_INET/g' "${client_file}/status-client.py"
   fi
-
+  Modify_config_client_liuliang
 }
 Install_jq() {
   if [[ ! -e ${jq_file} ]]; then

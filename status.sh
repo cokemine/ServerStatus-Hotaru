@@ -199,7 +199,7 @@ Installation_dependency() {
         yum -y install python
       fi
       if [[ ${isVnstat} == [Yy] ]]; then
-        yum -y install vnstat
+        Install_vnStat
       fi
     else
       if [ "${python_status}" -eq 0 ]; then
@@ -207,7 +207,7 @@ Installation_dependency() {
         apt-get -y install python
       fi
       if [[ ${isVnstat} == [Yy] ]]; then
-        apt-get -y install vnstat
+        Install_vnStat
       fi
     fi
   fi
@@ -669,11 +669,41 @@ Set_ServerStatus_client() {
   Add_iptables_OUT "${server_port_s}"
   Restart_ServerStatus_client
 }
+Install_vnStat() {
+  if [[ ${release} == "centos" ]]; then
+    yum -y update
+    yum -y install sqlite sqlite-devel make
+    yum -y groupinstall "Development Tools"
+  else
+    apt-get -y update
+    apt-get -y install sqlite3 libsqlite3-dev make build-essential
+  fi
+  wget --no-check-certificate https://humdi.net/vnstat/vnstat-latest.tar.gz
+  tar zxvf vnstat-latest.tar.gz
+  cd vnstat-*/ || return
+  ./configure --prefix=/usr --sysconfdir=/etc && make && make install
+  if ! vnstat -v >/dev/null 2>&1; then
+    echo "编译vnStat失败，请手动安装vnStat"
+    exit 1
+  fi
+  vnstatd -d
+  cp -v examples/systemd/simple/vnstat.service /etc/systemd/system/
+  systemctl enable vnstat
+  systemctl start vnstat
+  if [[ ${release} == "centos" ]]; then
+    cp -v examples/init.d/redhat/vnstat /etc/init.d/
+    chkconfig vnstat on
+    service vnstat restart
+  else
+    cp -v examples/init.d/debian/vnstat /etc/init.d/
+    update-rc.d vnstat defaults
+    service vnstat restart
+  fi
+}
 Modify_config_client_liuliang() {
   if [[ ${isVnstat} == [Yy] ]]; then
     if ! vnstat -v >/dev/null 2>&1; then
-      echo "Vnstat安装有误，请检查"
-      exit 1
+      Install_vnStat
     else
       netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
       if [ -z "$netName" ]; then
@@ -689,10 +719,10 @@ Modify_config_client_liuliang() {
       while ! [[ $time_N =~ ^[0-9]*$ ]] || ((time_N < 1 || time_N > 28)); do
         read -e -r -p "你输入的日期不合法，请重新输入: " time_N
       done
-      sed -i "s/$(grep "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
+      sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
+      sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
+      service vnstat restart
       chmod -R 777 /var/lib/vnstat/
-      vnstat -u -i "$netName"
-      sed -i "s/$(grep "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
       service vnstat restart
       if ! grep -q "vnstat" ${client_file}/status-client.py; then
         sed -i 's/\t/    /g' ${client_file}/status-client.py
@@ -827,7 +857,7 @@ Install_ServerStatus_client() {
   [[ -e "${client_file}/status-client.py" ]] && echo -e "${Error} 检测到 ServerStatus 客户端已安装 !" && exit 1
   check_sys
   if [[ ${release} == "centos" ]]; then
-    if grep "7\..*" /etc/redhat-release | grep -i "centos" >/dev/null 2>&1; then
+    if grep "6\..*" /etc/redhat-release | grep -i "centos" >/dev/null; then
       echo -e "${Info} 检测到你的系统为 CentOS6，该系统自带的 Python2.6 版本过低，会导致无法运行客户端，如果你有能力升级为 Python2.7或以上版本，那么请继续(否则建议更换系统)：[y/N]"
       read -e -r -p "(默认: N 继续安装):" sys_centos6
       [[ -z "$sys_centos6" ]] && sys_centos6="n"

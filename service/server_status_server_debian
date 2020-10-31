@@ -17,11 +17,10 @@ WEB_BIN="/usr/local/ServerStatus/web"
 CONF="/usr/local/ServerStatus/server/config.json"
 CONF1="/usr/local/ServerStatus/server/config.conf"
 Info_font_prefix="\033[32m" && Error_font_prefix="\033[31m" && Font_suffix="\033[0m"
-#Info_background_prefix="\033[42;37m" && Error_background_prefix="\033[41;37m"
 RETVAL=0
 
 check_running(){
-	PID=$(pgrep -f "${NAME_BIN}" |grep -v "pgrep" |grep -v "init.d" |grep -v "service")
+	PID=$(pgrep -f "${NAME_BIN}")
 	if [[ -n ${PID} ]]; then
 		return 0
 	else

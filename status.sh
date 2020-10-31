@@ -61,11 +61,11 @@ check_installed_client_status() {
 }
 check_pid_server() {
   #PID=$(ps -ef | grep "sergate" | grep -v grep | grep -v ".sh" | grep -v "init.d" | grep -v "service" | awk '{print $2}')
-  PID=$(pgrep -f "sergate" | grep -v "pgrep" | grep -v ".sh" | grep -v "init.d" | grep -v "service")
+  PID=$(pgrep -f "sergate")
 }
 check_pid_client() {
   #PID=$(ps -ef | grep "status-client.py" | grep -v grep | grep -v ".sh" | grep -v "init.d" | grep -v "service" | awk '{print $2}')
-  PID=$(pgrep -f "status-client.py" | grep -v "pgrep" | grep -v ".sh" | grep -v "init.d" | grep -v "service")
+  PID=$(pgrep -f "status-client.py")
 }
 Download_Server_Status_server() {
   cd "/tmp" || exit
@@ -266,11 +266,11 @@ Set_server() {
   if [[ ${mode} == "server" ]]; then
     echo -e "请输入 ServerStatus 服务端中网站要设置的 域名[server]
 默认为本机IP为域名，例如输入: toyoo.pw ，如果要使用本机IP，请留空直接回车"
-    read -e -r -p "(默认: 本机IP):" server_s
+    read -erp "(默认: 本机IP):" server_s
     [[ -z "$server_s" ]] && server_s=""
   else
     echo -e "请输入 ServerStatus 服务端的 IP/域名[server]，请注意，如果你的域名使用了CDN，请直接填写IP"
-    read -e -r -p "(默认: 127.0.0.1):" server_s
+    read -erp "(默认: 127.0.0.1):" server_s
     [[ -z "$server_s" ]] && server_s="127.0.0.1"
   fi
 
@@ -281,7 +281,7 @@ Set_server() {
 Set_server_http_port() {
   while true; do
     echo -e "请输入 ServerStatus 服务端中网站要设置的 域名/IP的端口[1-65535]（如果是域名的话，一般用 80 端口）"
-    read -e -r -p "(默认: 8888):" server_http_port_s
+    read -erp "(默认: 8888):" server_http_port_s
     [[ -z "$server_http_port_s" ]] && server_http_port_s="8888"
     if [[ $server_http_port_s =~ ^[0-9]*$ ]]; then
       if [[ ${server_http_port_s} -ge 1 ]] && [[ ${server_http_port_s} -le 65535 ]]; then
@@ -300,7 +300,7 @@ Set_server_http_port() {
 Set_server_port() {
   while true; do
     echo -e "请输入 ServerStatus 服务端监听的端口[1-65535]（用于服务端接收客户端消息的端口，客户端要填写这个端口）"
-    read -e -r -p "(默认: 35601):" server_port_s
+    read -erp "(默认: 35601):" server_port_s
     [[ -z "$server_port_s" ]] && server_port_s="35601"
     if [[ "$server_port_s" =~ ^[0-9]*$ ]]; then
       if [[ ${server_port_s} -ge 1 ]] && [[ ${server_port_s} -le 65535 ]]; then
@@ -324,7 +324,7 @@ Set_username() {
   else
     echo -e "请输入 ServerStatus 服务端中对应配置的用户名[username]（字母/数字，不可与其他账号重复）"
   fi
-  read -e -r -p "(默认: 取消):" username_s
+  read -erp "(默认: 取消):" username_s
   [[ -z "$username_s" ]] && echo "已取消..." && exit 0
   echo && echo "	================================================"
   echo -e "	账号[username]: ${Red_background_prefix} ${username_s} ${Font_color_suffix}"
@@ -338,7 +338,7 @@ Set_password() {
   else
     echo -e "请输入 ServerStatus 服务端中对应配置的密码[password]（字母/数字）"
   fi
-  read -e -r -p "(默认: doub.io):" password_s
+  read -erp "(默认: doub.io):" password_s
   [[ -z "$password_s" ]] && password_s="doub.io"
   echo && echo "	================================================"
   echo -e "	密码[password]: ${Red_background_prefix} ${password_s} ${Font_color_suffix}"
@@ -346,12 +346,12 @@ Set_password() {
 }
 Set_vnstat() {
   echo -e "对于流量计算是否使用Vnstat每月自动清零？ [y/N]"
-  read -e -r -p "(默认: N):" isVnstat
+  read -erp "(默认: N):" isVnstat
   [[ -z "$isVnstat" ]] && isVnstat="n"
 }
 Set_name() {
   echo -e "请输入 ServerStatus 服务端要设置的节点名称[name]（支持中文，前提是你的系统和SSH工具支持中文输入，仅仅是个名字）"
-  stty erase '^H' && read -r -p "(默认: Server 01):" name_s
+  read -erp "(默认: Server 01):" name_s
   [[ -z "$name_s" ]] && name_s="Server 01"
   echo && echo "	================================================"
   echo -e "	节点名称[name]: ${Red_background_prefix} ${name_s} ${Font_color_suffix}"
@@ -359,7 +359,7 @@ Set_name() {
 }
 Set_type() {
   echo -e "请输入 ServerStatus 服务端要设置的节点虚拟化类型[type]（例如 OpenVZ / KVM）"
-  stty erase '^H' && read -r -p "(默认: KVM):" type_s
+  read -erp "(默认: KVM):" type_s
   [[ -z "$type_s" ]] && type_s="KVM"
   echo && echo "	================================================"
   echo -e "	虚拟化类型[type]: ${Red_background_prefix} ${type_s} ${Font_color_suffix}"
@@ -367,7 +367,7 @@ Set_type() {
 }
 Set_location() {
   echo -e "请输入 ServerStatus 服务端要设置的节点位置[location]（支持中文，前提是你的系统和SSH工具支持中文输入）"
-  stty erase '^H' && read -e -r -p "(默认: Hong Kong):" location_s
+  read -erp "(默认: Hong Kong):" location_s
   [[ -z "$location_s" ]] && location_s="Hong Kong"
   echo && echo "	================================================"
   echo -e "	节点位置[location]: ${Red_background_prefix} ${location_s} ${Font_color_suffix}"
@@ -375,7 +375,7 @@ Set_location() {
 }
 Set_region() {
   echo -e "请输入 ServerStatus 服务端要设置的节点区域[region]（用于国旗/区旗图片显示）"
-  read -e -r -p "(默认: HK):" region_s
+  read -erp "(默认: HK):" region_s
   [[ -z "$region_s" ]] && region_s="HK"
   echo && echo "	================================================"
   echo -e "	节点位置[region]: ${Red_background_prefix} ${region_s} ${Font_color_suffix}"
@@ -414,7 +414,7 @@ Set_ServerStatus_server() {
  ${Green_font_prefix} 10.${Font_color_suffix} 启用/禁用 节点配置
 ————————
  ${Green_font_prefix}11.${Font_color_suffix} 修改 服务端监听端口" && echo
-  read -e -r -p "(默认: 取消):" server_num
+  read -erp "(默认: 取消):" server_num
   [[ -z "${server_num}" ]] && echo "已取消..." && exit 1
   if [[ ${server_num} == "1" ]]; then
     Add_ServerStatus_server
@@ -492,7 +492,7 @@ Del_ServerStatus_server() {
   List_ServerStatus_server
   [[ "${conf_text_total}" == "1" ]] && echo -e "${Error} 节点配置仅剩 1个，不能删除 !" && exit 1
   echo -e "请输入要删除的节点用户名"
-  read -e -r -p "(默认: 取消):" del_server_username
+  read -erp "(默认: 取消):" del_server_username
   [[ -z "${del_server_username}" ]] && echo -e "已取消..." && exit 1
   del_username=$(cat -n ${server_conf} | grep '"username": "'"${del_server_username}"'"' | awk '{print $1}')
   if [[ -n ${del_username} ]]; then
@@ -513,7 +513,7 @@ Del_ServerStatus_server() {
 Modify_ServerStatus_server_username() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -529,7 +529,7 @@ Modify_ServerStatus_server_username() {
 Modify_ServerStatus_server_password() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -545,7 +545,7 @@ Modify_ServerStatus_server_password() {
 Modify_ServerStatus_server_name() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -561,7 +561,7 @@ Modify_ServerStatus_server_name() {
 Modify_ServerStatus_server_type() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -577,7 +577,7 @@ Modify_ServerStatus_server_type() {
 Modify_ServerStatus_server_location() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -593,7 +593,7 @@ Modify_ServerStatus_server_location() {
 Modify_ServerStatus_server_region() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -609,7 +609,7 @@ Modify_ServerStatus_server_region() {
 Modify_ServerStatus_server_all() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -643,7 +643,7 @@ Modify_ServerStatus_server_all() {
 Modify_ServerStatus_server_disabled() {
   List_ServerStatus_server
   echo -e "请输入要修改的节点用户名"
-  read -e -r -p "(默认: 取消):" manually_username
+  read -erp "(默认: 取消):" manually_username
   [[ -z "${manually_username}" ]] && echo -e "已取消..." && exit 1
   Set_username_num=$(cat -n ${server_conf} | grep '"username": "'"${manually_username}"'"' | awk '{print $1}')
   if [[ -n ${Set_username_num} ]]; then
@@ -711,13 +711,12 @@ Modify_config_client_liuliang() {
         exit 1
       fi
       if [[ $netName =~ [[:space:]] ]]; then
-        echo "检测到多个网卡: ${netName}，请手动输入网卡名称"
-        read -e -r netName
+        read -erp "检测到多个网卡: ${netName}，请手动输入网卡名称" netName
       fi
-      read -e -r -p "请输入每月流量归零的日期(1~28)，默认为1(即每月1日): " time_N
+      read -erp "请输入每月流量归零的日期(1~28)，默认为1(即每月1日): " time_N
       [[ -z "$time_N" ]] && time_N="1"
       while ! [[ $time_N =~ ^[0-9]*$ ]] || ((time_N < 1 || time_N > 28)); do
-        read -e -r -p "你输入的日期不合法，请重新输入: " time_N
+        read -erp "你输入的日期不合法，请重新输入: " time_N
       done
       sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
       sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
@@ -791,7 +790,7 @@ Install_jq() {
 Install_caddy() {
   echo
   echo -e "${Info} 是否由脚本自动配置HTTP服务(服务端的在线监控网站)，如果选择 N，则请在其他HTTP服务中配置网站根目录为：${Green_font_prefix}${web_file}${Font_color_suffix} [Y/n]"
-  read -e -r -p "(默认: Y 自动部署):" caddy_yn
+  read -erp "(默认: Y 自动部署):" caddy_yn
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
   if [[ "${caddy_yn}" == [Yy] ]]; then
     Set_server "server"
@@ -859,7 +858,7 @@ Install_ServerStatus_client() {
   if [[ ${release} == "centos" ]]; then
     if grep "6\..*" /etc/redhat-release | grep -i "centos" | grep -v "{^6}\.6" >/dev/null; then
       echo -e "${Info} 检测到你的系统为 CentOS6，该系统自带的 Python2.6 版本过低，会导致无法运行客户端，如果你有能力升级为 Python2.7或以上版本，那么请继续(否则建议更换系统)：[y/N]"
-      read -e -r -p "(默认: N 继续安装):" sys_centos6
+      read -erp "(默认: N 继续安装):" sys_centos6
       [[ -z "$sys_centos6" ]] && sys_centos6="n"
       if [[ "${sys_centos6}" == [Nn] ]]; then
         echo -e "\n${Info} 已取消...\n"
@@ -943,7 +942,7 @@ Uninstall_ServerStatus_server() {
   check_installed_server_status
   echo "确定要卸载 ServerStatus 服务端(如果同时安装了客户端，则只会删除服务端) ? [y/N]"
   echo
-  read -e -r -p "(默认: n):" unyn
+  read -erp "(默认: n):" unyn
   [[ -z ${unyn} ]] && unyn="n"
   if [[ ${unyn} == [Yy] ]]; then
     check_pid_server
@@ -997,7 +996,7 @@ Uninstall_ServerStatus_client() {
   check_installed_client_status
   echo "确定要卸载 ServerStatus 客户端(如果同时安装了服务端，则只会删除客户端) ? [y/N]"
   echo
-  read -e -r -p "(默认: n):" unyn
+  read -erp "(默认: n):" unyn
   [[ -z ${unyn} ]] && unyn="n"
   if [[ ${unyn} == [Yy] ]]; then
     check_pid_client
@@ -1134,7 +1133,7 @@ menu_client() {
     fi
   fi
   echo
-  read -e -r -p " 请输入数字 [0-10]:" num
+  read -erp " 请输入数字 [0-10]:" num
   case "$num" in
   0)
     Update_Shell
@@ -1204,7 +1203,7 @@ menu_server() {
     echo -e " 当前状态: 服务端 ${Red_font_prefix}未安装${Font_color_suffix}"
   fi
   echo
-  read -e -r -p " 请输入数字 [0-10]:" num
+  read -erp " 请输入数字 [0-10]:" num
   case "$num" in
   0)
     Update_Shell

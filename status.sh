@@ -857,7 +857,7 @@ Install_ServerStatus_client() {
   [[ -e "${client_file}/status-client.py" ]] && echo -e "${Error} 检测到 ServerStatus 客户端已安装 !" && exit 1
   check_sys
   if [[ ${release} == "centos" ]]; then
-    if grep "6\..*" /etc/redhat-release | grep -i "centos" >/dev/null; then
+    if grep "6\..*" /etc/redhat-release | grep -i "centos" | grep -v "{^6}\.6" >/dev/null; then
       echo -e "${Info} 检测到你的系统为 CentOS6，该系统自带的 Python2.6 版本过低，会导致无法运行客户端，如果你有能力升级为 Python2.7或以上版本，那么请继续(否则建议更换系统)：[y/N]"
       read -e -r -p "(默认: N 继续安装):" sys_centos6
       [[ -z "$sys_centos6" ]] && sys_centos6="n"

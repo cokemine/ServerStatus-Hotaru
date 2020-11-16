@@ -57,13 +57,12 @@ function uptime() {
             var loadingNotice = document.getElementById("loading-notice");
             loadingNotice && loadingNotice.parentNode.removeChild(loadingNotice);
             for (var i = 0, length = result.servers.length; i < length; i++) {
-                if (result.servers[i].online6) result.servers[i].online4 = true;
                 //Cards Start
                 // Memory
                 var Mem = ((result.servers[i].memory_used / result.servers[i].memory_total) * 100.0).toFixed(0);
                 // Network
                 var newnetstr = createNetworkStr(result.servers[i].network_rx) + " | " + createNetworkStr(result.servers[i].network_tx);
-                shinnerhtml += shstr.replace("@name", result.servers[i].name).replace("@network_rxandnetwork_tx", newnetstr).replace("@type", result.servers[i].type).replace("@online", result.servers[i].online4 ? 'text-success' : 'text-error').replace("@location", result.servers[i].location).replace("@Mem", Mem).replace("@load", result.servers[i].load).replace("@region", result.servers[i].region);
+                shinnerhtml += shstr.replace("@name", result.servers[i].name).replace("@network_rxandnetwork_tx", newnetstr).replace("@type", result.servers[i].type).replace("@online", (result.servers[i].online4 || result.servers[i].online6) ? 'text-success' : 'text-error').replace("@location", result.servers[i].location).replace("@Mem", Mem).replace("@load", result.servers[i].load).replace("@region", result.servers[i].region);
                 //Cards End
                 //Table Start
                 var TableRow = document.querySelectorAll("#servers tr#r" + i);
@@ -102,7 +101,7 @@ function uptime() {
                 TableRow = document.querySelector("#servers tr#r" + i);
                 ExpandRow = document.querySelector("#servers #rt" + i);
                 // Online4
-                if (result.servers[i].online4) {
+                if (result.servers[i].online4 || result.servers[i].online6) {
                     TableRow.children["online4"].children[0].children[0].className = "progress-bar progress-bar-success";
                     TableRow.children["online4"].children[0].children[0].innerHTML = "<small>运行中</small>";
                 } else {

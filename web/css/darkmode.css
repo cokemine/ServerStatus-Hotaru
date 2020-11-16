@@ -30,7 +30,7 @@ body.dark table.table-striped tr.odd {
 }
 
 body.dark tr.expandRow {
-    background-color: #263238!important;
+    background-color: #263238 !important;
 }
 
 body.dark .panel {

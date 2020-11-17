@@ -3,7 +3,7 @@
 # Update by: https://github.com/CokeMine/ServerStatus-Hotaru
 
 SERVER = "127.0.0.1"
-PORT = PORT
+PORT = 35601
 USER = "USER"
 PASSWORD = "USER_PASSWORD"
 INTERVAL = 1  # 更新间隔，单位：秒
@@ -35,7 +35,7 @@ def get_memory():
     for line in open('/proc/meminfo'):
         match = re_parser.match(line)
         if not match:
-            continue;
+            continue
         key, value = match.groups(['key', 'value'])
         result[key] = int(value)
 
@@ -69,8 +69,7 @@ def get_time():
     stat_file = open("/proc/stat", "r")
     time_list = stat_file.readline().split(' ')[2:6]
     stat_file.close()
-    for i in range(len(time_list)):
-        time_list[i] = int(time_list[i])
+    time_list = list(map(int, time_list))
     return time_list
 
 
@@ -88,7 +87,7 @@ def get_cpu():
     st = sum(t)
     if st == 0:
         st = 1
-    result = 100 - (t[len(t) - 1] * 100.00 / st)
+    result = 100 - (float(t[len(t) - 1]) * 100.00 / st)
     return round(result)
 
 
@@ -101,7 +100,7 @@ class Traffic:
         f = open('/proc/net/dev', 'r')
         net_dev = f.readlines()
         f.close()
-        avgrx = 0;
+        avgrx = 0
         avgtx = 0
 
         for dev in net_dev[2:]:
@@ -114,7 +113,7 @@ class Traffic:
 
         self.rx.append(avgrx)
         self.tx.append(avgtx)
-        avgrx = 0;
+        avgrx = 0
         avgtx = 0
 
         l = len(self.rx)
@@ -150,8 +149,10 @@ def get_network(ip_version):
         HOST = "ipv4.google.com"
     elif (ip_version == 6):
         HOST = "ipv6.google.com"
+    else:
+        HOST = "ipv4.google.com"
     try:
-        s = socket.create_connection((HOST, 80), 2)
+        socket.create_connection((HOST, 80), 2).close()
         return True
     except:
         pass
@@ -163,8 +164,7 @@ if __name__ == '__main__':
     while 1:
         try:
             print("Connecting...")
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((SERVER, PORT))
+            s = socket.create_connection((SERVER, PORT))
             data = s.recv(1024).decode()
             if data.find("Authentication required") > -1:
                 s.send((USER + ':' + PASSWORD + '\n').encode("utf-8"))

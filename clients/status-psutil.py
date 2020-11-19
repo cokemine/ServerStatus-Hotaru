@@ -114,7 +114,7 @@ def get_network(ip_version):
     elif (ip_version == 6):
         HOST = "ipv6.google.com"
     else:
-        HOST = "ipv4.google.com"
+        return False
     try:
         s = socket.create_connection((HOST, 80), 2).close()
         return True
@@ -125,7 +125,7 @@ def get_network(ip_version):
 
 if __name__ == '__main__':
     socket.setdefaulttimeout(30)
-    while 1:
+    while True:
         try:
             print("Connecting...")
             s = socket.create_connection((SERVER, PORT))
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
             traffic = Traffic()
             traffic.get()
-            while 1:
+            while True:
                 CPU = get_cpu()
                 NetRx, NetTx = traffic.get()
                 NET_IN, NET_OUT = liuliang()
@@ -193,9 +193,11 @@ if __name__ == '__main__':
         except socket.error:
             print("Disconnected...")
             # keep on trying after a disconnect
-            s.close()
+            if 's' in locals().keys():
+                del s
             time.sleep(3)
         except Exception as e:
             print("Caught Exception:", e)
-            s.close()
+            if 's' in locals().keys():
+                del s
             time.sleep(3)

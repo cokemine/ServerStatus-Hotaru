@@ -704,28 +704,28 @@ Modify_config_client_liuliang() {
   if [[ ${isVnstat} == [Yy] ]]; then
     if ! vnstat -v >/dev/null 2>&1; then
       Install_vnStat
-    else
-      netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
-      if [ -z "$netName" ]; then
-        echo "获取网卡名称失败，请在Github反馈"
-        exit 1
-      fi
-      if [[ $netName =~ [[:space:]] ]]; then
-        read -erp "检测到多个网卡: ${netName}，请手动输入网卡名称" netName
-      fi
-      read -erp "请输入每月流量归零的日期(1~28)，默认为1(即每月1日): " time_N
-      [[ -z "$time_N" ]] && time_N="1"
-      while ! [[ $time_N =~ ^[0-9]*$ ]] || ((time_N < 1 || time_N > 28)); do
-        read -erp "你输入的日期不合法，请重新输入: " time_N
-      done
-      sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
-      sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
-      service vnstat restart
-      chmod -R 777 /var/lib/vnstat/
-      service vnstat restart
-      if ! grep -q "vnstat" ${client_file}/status-client.py; then
-        sed -i 's/\t/    /g' ${client_file}/status-client.py
-        vnstat_py="\
+    fi
+    netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
+    if [ -z "$netName" ]; then
+      echo "获取网卡名称失败，请在Github反馈"
+      exit 1
+    fi
+    if [[ $netName =~ [[:space:]] ]]; then
+      read -erp "检测到多个网卡: ${netName}，请手动输入网卡名称" netName
+    fi
+    read -erp "请输入每月流量归零的日期(1~28)，默认为1(即每月1日): " time_N
+    [[ -z "$time_N" ]] && time_N="1"
+    while ! [[ $time_N =~ ^[0-9]*$ ]] || ((time_N < 1 || time_N > 28)); do
+      read -erp "你输入的日期不合法，请重新输入: " time_N
+    done
+    sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
+    sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
+    service vnstat restart
+    chmod -R 777 /var/lib/vnstat/
+    service vnstat restart
+    if ! grep -q "vnstat" ${client_file}/status-client.py; then
+      sed -i 's/\t/    /g' ${client_file}/status-client.py
+      vnstat_py="\
     NET_IN = 0\n\
     NET_OUT = 0\n\
     vnstat = os.popen('vnstat --oneline b').readline()\n\
@@ -733,9 +733,8 @@ Modify_config_client_liuliang() {
     NET_IN = int(mdata[8])\n\
     NET_OUT = int(mdata[9])\n\
     return NET_IN, NET_OUT"
-        sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
-        sed -i "/def\ liuliang():/a\\$vnstat_py" ${client_file}/status-client.py
-      fi
+      sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
+      sed -i "/def\ liuliang():/a\\$vnstat_py" ${client_file}/status-client.py
     fi
   elif grep -q "vnstat" ${client_file}/status-client.py; then
     sed -i 's/\t/    /g' ${client_file}/status-client.py

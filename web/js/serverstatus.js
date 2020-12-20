@@ -61,7 +61,7 @@ function uptime() {
                 // Memory
                 var Mem = ((result.servers[i].memory_used / result.servers[i].memory_total) * 100.0).toFixed(0);
                 // Network
-                var newnetstr = createNetworkStr(result.servers[i].network_rx) + " | " + createNetworkStr(result.servers[i].network_tx);
+                var newnetstr = createStr(result.servers[i].network_rx, false) + " | " + createStr(result.servers[i].network_tx, false);
                 shinnerhtml += shstr.replace("@name", result.servers[i].name).replace("@network_rxandnetwork_tx", newnetstr).replace("@type", result.servers[i].type).replace("@online", (result.servers[i].online4 || result.servers[i].online6) ? 'text-success' : 'text-error').replace("@location", result.servers[i].location).replace("@Mem", Mem).replace("@load", result.servers[i].load).replace("@region", result.servers[i].region);
                 //Cards End
                 //Table Start
@@ -168,10 +168,10 @@ function uptime() {
                     }
 
                     // Network
-                    TableRow.children["network"].innerHTML = createNetworkStr(result.servers[i].network_rx) + " | " + createNetworkStr(result.servers[i].network_tx);
+                    TableRow.children["network"].innerHTML = createStr(result.servers[i].network_rx, false) + " | " + createStr(result.servers[i].network_tx, false);
 
                     //Traffic
-                    TableRow.children["traffic"].innerHTML = createTrafficStr(result.servers[i].network_in) + " | " + createTrafficStr(result.servers[i].network_out);
+                    TableRow.children["traffic"].innerHTML = createStr(result.servers[i].network_in, false) + " | " + createStr(result.servers[i].network_out, false);
 
                     // CPU
                     if (result.servers[i].cpu >= 90)
@@ -193,9 +193,9 @@ function uptime() {
                         TableRow.children["memory"].children[0].children[0].className = "progress-bar progress-bar-success";
                     TableRow.children["memory"].children[0].children[0].style.width = Mem + "%";
                     TableRow.children["memory"].children[0].children[0].innerHTML = Mem + "%";
-                    ExpandRow.children["expand_mem"].innerHTML = "内存信息: " + bytesToSize(result.servers[i].memory_used * 1024, 2) + " / " + bytesToSize(result.servers[i].memory_total * 1024, 2);
+                    ExpandRow.children["expand_mem"].innerHTML = "内存信息: " + createStr(result.servers[i].memory_used * 1024, true) + " / " + createStr(result.servers[i].memory_total * 1024, true);
                     // Swap
-                    ExpandRow.children["expand_swap"].innerHTML = "交换分区: " + bytesToSize(result.servers[i].swap_used * 1024, 2) + " / " + bytesToSize(result.servers[i].swap_total * 1024, 2);
+                    ExpandRow.children["expand_swap"].innerHTML = "交换分区: " + createStr(result.servers[i].swap_used * 1024, true) + " / " + createStr(result.servers[i].swap_total * 1024, true);
 
                     // HDD
                     var HDD = ((result.servers[i].hdd_used / result.servers[i].hdd_total) * 100.0).toFixed(0);
@@ -207,7 +207,7 @@ function uptime() {
                         TableRow.children["hdd"].children[0].children[0].className = "progress-bar progress-bar-success";
                     TableRow.children["hdd"].children[0].children[0].style.width = HDD + "%";
                     TableRow.children["hdd"].children[0].children[0].innerHTML = HDD + "%";
-                    ExpandRow.children["expand_hdd"].innerHTML = "硬盘信息: " + bytesToSize(result.servers[i].hdd_used * 1024 * 1024, 2) + " / " + bytesToSize(result.servers[i].hdd_total * 1024 * 1024, 2);
+                    ExpandRow.children["expand_hdd"].innerHTML = "硬盘信息: " + createStr(result.servers[i].hdd_used * 1024 * 1024, true) + " / " + createStr(result.servers[i].hdd_total * 1024 * 1024, true);
 
                     // Custom
                     if (result.servers[i].custom) {
@@ -327,63 +327,31 @@ function ExpandRowMove(obj, attr, target, speed, callback) {
     }, 15);
 }
 
-//Memory & Swap
-function bytesToSize(bytes, precision, si) {
-    var ret;
-    si = typeof si !== 'undefined' ? si : 0;
-    var kilobyte = 1024;
-    var megabyte = kilobyte * 1024;
-    var gigabyte = megabyte * 1024;
-    var terabyte = gigabyte * 1024;
-    if (si) {
-        kilobyte = 1000;
-        megabyte = kilobyte * 1000;
-        gigabyte = megabyte * 1000;
-        terabyte = gigabyte * 1000;
-    }
-    if ((bytes >= 0) && (bytes < kilobyte)) {
-        return bytes + ' B';
-    } else if ((bytes >= kilobyte) && (bytes < megabyte)) {
-        ret = (bytes / kilobyte).toFixed(precision) + ' K';
-    } else if ((bytes >= megabyte) && (bytes < gigabyte)) {
-        ret = (bytes / megabyte).toFixed(precision) + ' M';
-    } else if ((bytes >= gigabyte) && (bytes < terabyte)) {
-        ret = (bytes / gigabyte).toFixed(precision) + ' G';
-    } else if (bytes >= terabyte) {
-        ret = (bytes / terabyte).toFixed(precision) + ' T';
-    } else {
-        return bytes + ' B';
-    }
-    if (si) {
-        return ret + 'B';
-    } else {
-        return ret + 'iB';
-    }
-}
-
-function createNetworkStr(network) {
+function createStr(data, f) {
     var str;
-    if (network < 1000)
-        str = network.toFixed(0) + "B";
-    else if (network < 1000 * 1000)
-        str = (network / 1000).toFixed(0) + "K";
-    else
-        str = (network / 1000 / 1000).toFixed(1) + "M";
-    return str;
-}
-
-function createTrafficStr(traffic) {
-    var str;
-    if (traffic < 1024)
-        str = traffic.toFixed(0) + "B";
-    else if (traffic < 1024 * 1024)
-        str = (traffic / 1024).toFixed(0) + "K";
-    else if (traffic < 1024 * 1024 * 1024)
-        str = (traffic / 1024 / 1024).toFixed(1) + "M";
-    else if (traffic < 1024 * 1024 * 1024 * 1024)
-        str = (traffic / 1024 / 1024 / 1024).toFixed(2) + "G";
-    else
-        str = (traffic / 1024 / 1024 / 1024 / 1024).toFixed(2) + "T";
+    if (f) {
+        if (data < 1024)
+            str = data.toFixed(0) + " B";
+        else if (data < 1024 * 1024)
+            str = (data / 1024).toFixed(2) + " KiB";
+        else if (data < 1024 * 1024 * 1024)
+            str = (data / 1024 / 1024).toFixed(2) + " MiB";
+        else if (data < 1024 * 1024 * 1024 * 1024)
+            str = (data / 1024 / 1024 / 1024).toFixed(2) + " GiB";
+        else
+            str = (data / 1024 / 1024 / 1024 / 1024).toFixed(2) + " TiB";
+    } else {
+        if (data < 1024)
+            str = data.toFixed(0) + "B";
+        else if (data < 1024 * 1024)
+            str = (data / 1024).toFixed(0) + "K";
+        else if (data < 1024 * 1024 * 1024)
+            str = (data / 1024 / 1024).toFixed(1) + "M";
+        else if (data < 1024 * 1024 * 1024 * 1024)
+            str = (data / 1024 / 1024 / 1024).toFixed(2) + "G";
+        else
+            str = (data / 1024 / 1024 / 1024 / 1024).toFixed(2) + "T";
+    }
     return str;
 }
 

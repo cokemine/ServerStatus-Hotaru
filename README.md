@@ -1,19 +1,21 @@
 # ServerStatus-Hotaru
 云探针、多服务器探针、云监控、多服务器云监控
 
-基于ServerStatus-Toyo最新版本稍作修改，不太会脚本什么的，前端也垃圾。见谅
+基于ServerStatus-Toyo最新版本稍作修改，不太会脚本什么的，前端也垃圾。见谅。
 
-Test v0.022：头图来源：Pixiv：72725286
+Cover pic来源: Pixiv: 69713505 & 86597206 如需用做商业用途请更换图片。
+
+本项目以MIT License开源。
 
 ## 特性
 
-模板来自：<https://www.hostloc.com/thread-494384-1-1.html>
+新版前端基于Vue.js 3.0和SemanticUI制作，如需修改前端建议自行修改打包（也可以尝试直接格式化后修改打包后的js文件，不建议）：
 
-以及：<https://www.hostloc.com/thread-493783-1-1.html>
-
-稍作修改，多了个Region调用国家/地区旗帜。
+https://github.com/CokeMine/Hotaru_theme
 
 客户端支持Python版本：Python2.7 - Python3.7
+
+客户端可以选择使用vnStat按月计算流量，默认会自动编译安装最新版本vnStat。
 
 ## 安装方法
 
@@ -89,19 +91,11 @@ vim status-psutil.py #修改客户端配置文件
 python3 status-psutil.py
 ```
 
-## Darkmode
-
-前端已支持Darkmode，点击页面右下角小图标即可切换Darkmode（样式可能不尽如人意，各位有更好的样式或实现方法欢迎提交PR）默认不开启。
-
-如何启动Darkmode：去掉index.html第99行注释即可
-
 ## 效果演示
 
-![](https://i.loli.net/2019/04/05/5ca74fb05338f.png)
+![RktuH.png](https://img.ams1.imgbed.xyz/2021/01/07/RktuH.png)
 
-![](https://i.loli.net/2019/04/05/5ca74fc86db96.png)
-
-前端欢迎自定义。
+![Rkrfr.png](https://img.ams1.imgbed.xyz/2021/01/07/Rkrfr.png)
 
 ## 相关开源项目 ： 
 * ServerStatus-Toyo：https://github.com/ToyoDAdoubiBackup/ServerStatus-Toyo

@@ -1,103 +1,25 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>可乐探针</title>
-
-
-    <!-- Fix chrome language detection -->
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-    <meta http-equiv="Content-Language" content="zh"/>
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="css/core.css" type="text/css">
-    <link rel="stylesheet" href="css/main.css" type="text/css">
-    <link rel="stylesheet" href="css/darkmode.css" type="text/css">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/semantic-ui/dist/semantic.min.css">
+    <script src="//cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="icon" href="/favicon.ico">
+    <title>ServerStatus</title>
+    <link href="/css/app.8455da2f.css" rel="preload" as="style">
+    <link href="/js/app.330e8d23.js" rel="preload" as="script">
+    <link href="/js/chunk-vendors.ea0354a0.js" rel="preload" as="script">
+    <link href="/css/app.8455da2f.css" rel="stylesheet">
 </head>
 
-<body>
-<section class="hotaru-cover">
-    <div class="container" style="text-align: center;">
-        <h1>
-            <strong>APTX探针</strong>
-        </h1>
-        <div>
-            <p>
-                <small>狀態更新和事件報告可能會延遲最多30分鐘<br/>具體取決於手頭的技術問題。請向下滾動查看過去的事件報告.</small>
-            </p>
-        </div>
-    </div>
-</section>
-<div class="container">
-    <div id="loading-notice">
-        <div class="progress progress-striped active">
-            <div class="progress-bar progress-bar-warning" style="width: 100%;">加载中...</div>
-        </div>
-        <div style="text-align:center;">
-            如果出現此消息，請確保您已啟用Javascript！ <br/>否則雲監控主服務（服務端）未啟動或已關閉.
-        </div>
-    </div>
-
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th id="status4">运行状态</th>
-            <th id="name">节点名</th>
-            <th id="type">类型</th>
-            <th id="location">服务器位置</th>
-            <th id="uptime">在线时间</th>
-            <th id="load">负载</th>
-            <th id="network">网络(B/s) ↓|↑</th>
-            <th id="traffic">流量(B) ↓|↑</th>
-            <th id="cpu">CPU</th>
-            <th id="ram">RAM</th>
-            <th id="hdd">ROM</th>
-        </tr>
-        </thead>
-        <tbody id="servers" style="text-align:center;">
-        <!-- Servers here \o/ -->
-        </tbody>
-    </table>
-
-    <br/>
-    <div id="updated" style="margin-left: 5px;">Updating...</div>
-</div>
-
-<div class="page-section">
-    <div class="container">
-        <div id="cards" class="row">
-            <div class="col-lg-4 col-md-4 col-sm-4">
-                <div class="panel panel-block panel-block-sm panel-location">
-                    <div class="location-header">
-                        <h3 class="h4"><img src="img/clients/HK.png" alt="HK"> Non <small>Non</small></h3>
-                        <i class="zmdi zmdi-check-circle text-success"></i>
-                    </div>
-                    <div class="location-progress">
-                        <div class="progress progress-sm">
-                            <div class="progress-bar" style="width: 92%;"></div>
-                        </div>
-                    </div>
-                    <ul class="location-info list-styled">
-                        <li><span class="list-label">状态:</span> 在线</li>
-                        <li><span class="list-label">空闲:</span> 100%</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!--Darkmode-->
-<!-- <button id="darkmodeButton"></button> -->
-<!-- Scripts -->
-<script src="js/serverstatus.js"></script>
+<body><noscript><strong>We're sorry but ServerStatus doesn't work properly without JavaScript enabled. Please enable it
+            to continue.</strong></noscript>
+    <div id="app"></div>
+    <script src="/js/chunk-vendors.ea0354a0.js"></script>
+    <script src="/js/app.330e8d23.js"></script>
 </body>
-
-<footer>
-    <p style="text-align:center;">Powered by <a
-            href="https://github.com/CokeMine/ServerStatus-Hotaru">ServerStatus-Hotaru</a></p>
-</footer>
 
 </html>

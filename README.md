@@ -3,15 +3,21 @@
 
 基于ServerStatus-Toyo最新版本稍作修改，不太会脚本什么的，前端也垃圾。见谅。
 
-Cover pic来源: Pixiv: 69713505 & 86597206 如需用做商业用途请更换图片。
+默认图片素材来源: Pixiv: 69713505 & 86597206 默认背景来源：nisekoi.jp
 
-本项目以MIT License开源。
+如需用做商业用途请更换主题图片。
+
+For commercial use, please replace the images.
+
+若本仓库用到的一些素材侵犯了您的版权，请联系我处理，谢谢。
+
+If some of the materials used in this repo infringe your copyright, please contact me, thanks.
 
 ## 特性
 
-新版前端基于Vue.js 3.0和SemanticUI制作，如需修改前端建议自行修改打包（也可以尝试直接格式化后修改打包后的js文件，不建议）：
+新版前端基于Vue 3.0和SemanticUI制作，如需修改前端建议自行修改打包（也可以尝试直接格式化打包后的js/css文件后修改，但是不建议）：
 
-https://github.com/CokeMine/Hotaru_theme
+前端开源地址：https://github.com/CokeMine/Hotaru_theme
 
 客户端支持Python版本：Python2.7 - Python3.7
 

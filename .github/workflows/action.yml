@@ -1,0 +1,49 @@
+name: 'Auto build Frontend'
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: Build Frontend
+jobs:
+  build_Frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout codes'
+        uses: actions/checkout@v2
+
+      - name: 'Checkout Frontend codes'
+        uses: actions/checkout@v2
+        with:
+          repository: CokeMine/Hotaru_theme
+          path: ./frontend
+
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: 'Build Frontend'
+        run: |
+          npm install
+          npm run build
+        working-directory: ./frontend
+
+      - name: 'Update and Commit'
+        id: commit
+        env:
+          EMAIL: ${{ secrets.EMAIL }}
+        run: |
+          rm -r ./web/*
+          cp -r ./frontend/dist/* ./web/
+          rm -r ./frontend
+          git config --local user.email $EMAIL
+          git config --local user.name "可乐"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -am 'Auto Update Frontend'
+          echo ::set-output name=status::success
+
+      - name: 'Push and Publish'
+        if: steps.commit.output.status != 'success'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

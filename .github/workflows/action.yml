@@ -22,15 +22,20 @@ jobs:
           node-version: '14'
 
       - name: 'Build Frontend'
+        id: build
         run: |
           npm install
           npm run build
+          ver=$(git log -1 --pretty=format:"%s")
+          commit_message=$(echo ${ver} | grep -qP "^v\d+(\.\d+)+$" && echo "update frontend: ${ver}" || echo "update frontend")
+          echo "::set-output name=commmit_message::${commit_message}"
         working-directory: ./frontend
 
       - name: 'Update and Commit'
         id: commit
         env:
           EMAIL: ${{ secrets.EMAIL }}
+          commit_message: ${{ steps.build.outputs.commmit_message }}
         run: |
           rm -r ./web/*
           cp -r ./frontend/dist/* ./web/
@@ -38,11 +43,11 @@ jobs:
           git config --local user.email $EMAIL
           git config --local user.name "可乐"
           git add .
-          git diff --quiet && git diff --staged --quiet || git commit -am 'Auto Update Frontend'
-          echo ::set-output name=status::success
+          git diff --quiet && git diff --staged --quiet || git commit -am "${commit_message}"
+          echo "::set-output name=status::success"
 
       - name: 'Push and Publish'
-        if: steps.commit.output.status != 'success'
+        if: steps.commit.outputs.status == 'success'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

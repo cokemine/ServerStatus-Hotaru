@@ -30,7 +30,7 @@ If some of the assets used in this repo infringe your copyright, please contact 
 服务端：
 
 ```bash
-wget https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/status.sh
+wget https://cdn.jsdelivr.net/CokeMine/ServerStatus-Hotaru/status.sh
 bash status.sh s
 ```
 

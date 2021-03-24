@@ -93,14 +93,16 @@ Download_Server_Status_server() {
   if [[ ! -e "${server_file}" ]]; then
     mkdir "${server_file}"
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-    mv "/tmp/ServerStatus-Hotaru-master/web" "${web_file}"
+    wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+    unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
   else
     if [[ -e "${server_file}/sergate" ]]; then
       mv "${server_file}/sergate" "${server_file}/sergate1"
       mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
     else
       mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-      mv "/tmp/ServerStatus-Hotaru-master/web" "${web_file}"
+      wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+      unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
     fi
   fi
   if [[ ! -e "${server_file}/sergate" ]]; then
@@ -413,7 +415,7 @@ Set_config_client() {
 Set_ServerStatus_server() {
   check_installed_server_status
   echo && echo -e " 你要做什么？
-	
+
  ${Green_font_prefix} 1.${Font_color_suffix} 添加 节点配置
  ${Green_font_prefix} 2.${Font_color_suffix} 删除 节点配置
 ————————
@@ -1035,12 +1037,12 @@ View_ServerStatus_client() {
   Read_config_client
   clear && echo "————————————————————" && echo
   echo -e "  ServerStatus 客户端配置信息：
- 
+
   IP \t: ${Green_font_prefix}${client_server}${Font_color_suffix}
   端口 \t: ${Green_font_prefix}${client_port}${Font_color_suffix}
   账号 \t: ${Green_font_prefix}${client_user}${Font_color_suffix}
   密码 \t: ${Green_font_prefix}${client_password}${Font_color_suffix}
- 
+
 ————————————————————"
 }
 View_client_Log() {

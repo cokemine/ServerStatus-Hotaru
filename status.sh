@@ -258,7 +258,7 @@ Read_config_client() {
   client_port="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   client_user="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"
   client_password="$(echo -e "${client_text}" | grep "PASSWORD=" | awk -F "=" '{print $2}')"
-  grep -q "get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat="true" || client_vnstat="false"
+  grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat="true" || client_vnstat="false"
 }
 Read_config_server() {
   if [[ ! -e "${server_conf_1}" ]]; then
@@ -722,7 +722,7 @@ Install_vnStat() {
   cd ~ || exit
 }
 Modify_config_client_traffic() {
-  if [[ ${isVnstat} == [Yy] ]] || [[ ${client_vnstat} == "true" ]]; then
+  if [[ ${isVnstat="y"} == [Yy] ]] && [[ ${client_vnstat="true"} == "true" ]]; then
     if ! vnstat -v >/dev/null 2>&1; then
       Install_vnStat
     fi
@@ -743,13 +743,13 @@ Modify_config_client_traffic() {
     sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
     chmod -R 777 /var/lib/vnstat/
     service vnstat restart
-    if ! grep -q "NET_IN, NET_OUT = traffic.get_traffic_vnstat()" ${client_file}/status-client.py; then
+    if ! grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" ${client_file}/status-client.py; then
       sed -i 's/\t/    /g' ${client_file}/status-client.py
-      sed -i 's/NET_IN, NET_OUT = traffic.get_traffic()/NET_IN, NET_OUT = traffic.get_traffic_vnstat()/' ${client_file}/status-client.py
+      sed -i 's/NET_IN, NET_OUT = traffic.get_traffic()/NET_IN, NET_OUT = get_traffic_vnstat()/' ${client_file}/status-client.py
     fi
-  elif grep -q "NET_IN, NET_OUT = traffic.get_traffic_vnstat()" ${client_file}/status-client.py; then
+  elif grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" ${client_file}/status-client.py; then
     sed -i 's/\t/    /g' ${client_file}/status-client.py
-    sed -i 's/NET_IN, NET_OUT = traffic.get_traffic_vnstat()/NET_IN, NET_OUT = traffic.get_traffic()/' ${client_file}/status-client.py
+    sed -i 's/NET_IN, NET_OUT = get_traffic_vnstat()/NET_IN, NET_OUT = traffic.get_traffic()/' ${client_file}/status-client.py
   fi
 }
 Modify_config_client() {

@@ -74,12 +74,21 @@ def get_cpu():
     return round(100 - float(idle - old_idle) / (total - old_total) * 100.00, 1)
 
 
+def get_traffic_vnstat():
+    vnstat = os.popen('vnstat --oneline b').readline()
+    v_data = vnstat.split(';')
+    net_in = int(v_data[8])
+    net_out = int(v_data[9])
+    return net_in, net_out
+
+
 class Network:
     def __init__(self):
         self.rx = deque(maxlen=10)
         self.tx = deque(maxlen=10)
+        self._get_traffic()
 
-    def get_traffic(self):
+    def _get_traffic(self):
         net_in = 0
         net_out = 0
         re_parser = re.compile(r'([^\s]+):[\s]*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+('
@@ -93,18 +102,9 @@ class Network:
                         net_out += int(net_info[0][9])
         self.rx.append(net_in)
         self.tx.append(net_out)
-        return net_in, net_out
-
-    def get_traffic_vnstat(self):
-        vnstat = os.popen('vnstat --oneline b').readline()
-        v_data = vnstat.split(';')
-        net_in = int(v_data[8])
-        net_out = int(v_data[9])
-        self.rx.append(net_in)
-        self.tx.append(net_out)
-        return net_in, net_out
 
     def get_speed(self):
+        self._get_traffic()
         avg_rx = 0
         avg_tx = 0
         queue_len = len(self.rx)
@@ -114,6 +114,10 @@ class Network:
         avg_rx = int(avg_rx / queue_len / INTERVAL)
         avg_tx = int(avg_tx / queue_len / INTERVAL)
         return avg_rx, avg_tx
+
+    def get_traffic(self):
+        queue_len = len(self.rx)
+        return self.rx[queue_len - 1], self.tx[queue_len - 1]
 
 
 def get_network(ip_version):
@@ -163,11 +167,10 @@ if __name__ == '__main__':
                 raise socket.error
 
             traffic = Network()
-            traffic.get_traffic()
             while True:
                 CPU = get_cpu()
-                NET_IN, NET_OUT = traffic.get_traffic()
                 NetRx, NetTx = traffic.get_speed()
+                NET_IN, NET_OUT = traffic.get_traffic()
                 Uptime = get_uptime()
                 Load = get_load()
                 MemoryTotal, MemoryUsed, SwapTotal, SwapFree = get_memory()

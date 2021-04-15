@@ -102,7 +102,7 @@ class Network:
         net_out = int(v_data[9])
         self.rx.append(net_in)
         self.tx.append(net_out)
-        return net_out, net_out
+        return net_in, net_out
 
     def get_speed(self):
         avg_rx = 0

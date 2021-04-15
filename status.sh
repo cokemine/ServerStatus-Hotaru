@@ -258,6 +258,7 @@ Read_config_client() {
   client_port="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   client_user="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"
   client_password="$(echo -e "${client_text}" | grep "PASSWORD=" | awk -F "=" '{print $2}')"
+  grep -q "get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat="true" || client_vnstat="false"
 }
 Read_config_server() {
   if [[ ! -e "${server_conf_1}" ]]; then
@@ -720,8 +721,8 @@ Install_vnStat() {
   rm -rf vnstat*
   cd ~ || exit
 }
-Modify_config_client_liuliang() {
-  if [[ ${isVnstat} == [Yy] ]]; then
+Modify_config_client_traffic() {
+  if [[ ${isVnstat} == [Yy] ]] || [[ ${client_vnstat} == "true" ]]; then
     if ! vnstat -v >/dev/null 2>&1; then
       Install_vnStat
     fi
@@ -756,7 +757,7 @@ Modify_config_client() {
   sed -i "s/PORT = ${client_port}/PORT = ${server_port_s}/g" "${client_file}/status-client.py"
   sed -i 's/USER = "'"${client_user}"'"/USER = "'"${username_s}"'"/g' "${client_file}/status-client.py"
   sed -i 's/PASSWORD = "'"${client_password}"'"/PASSWORD = "'"${password_s}"'"/g' "${client_file}/status-client.py"
-  Modify_config_client_liuliang
+  Modify_config_client_traffic
 }
 Install_jq() {
   if [[ ! -e ${jq_file} ]]; then
@@ -1019,6 +1020,7 @@ View_ServerStatus_client() {
   端口 \t: ${Green_font_prefix}${client_port}${Font_color_suffix}
   账号 \t: ${Green_font_prefix}${client_user}${Font_color_suffix}
   密码 \t: ${Green_font_prefix}${client_password}${Font_color_suffix}
+  vnStat \t: ${Green_font_prefix}${client_vnstat}${Font_color_suffix}
 
 ————————————————————"
 }

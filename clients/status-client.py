@@ -17,6 +17,12 @@ PASSWORD = "USER_PASSWORD"
 INTERVAL = 1  # 更新间隔，单位：秒
 
 
+def check_interface(net_name):
+    net_name = net_name.strip()
+    invalid_name = ['lo', 'tun', 'kube', 'docker', 'vmbr', 'br-', 'vnet', 'veth']
+    return not any(name in net_name for name in invalid_name)
+
+
 def get_uptime():
     with open('/proc/uptime', 'r') as f:
         uptime = f.readline().split('.')
@@ -89,6 +95,15 @@ class Network:
         self.tx.append(net_out)
         return net_in, net_out
 
+    def get_traffic_vnstat(self):
+        vnstat = os.popen('vnstat --oneline b').readline()
+        v_data = vnstat.split(';')
+        net_in = int(v_data[8])
+        net_out = int(v_data[9])
+        self.rx.append(net_in)
+        self.tx.append(net_out)
+        return net_out, net_out
+
     def get_speed(self):
         avg_rx = 0
         avg_tx = 0
@@ -99,12 +114,6 @@ class Network:
         avg_rx = int(avg_rx / queue_len / INTERVAL)
         avg_tx = int(avg_tx / queue_len / INTERVAL)
         return avg_rx, avg_tx
-
-
-def check_interface(net_name):
-    net_name = net_name.strip()
-    invalid_name = ['lo', 'tun', 'kube', 'docker', 'vmbr', 'br-', 'vnet', 'veth']
-    return not any(name in net_name for name in invalid_name)
 
 
 def get_network(ip_version):

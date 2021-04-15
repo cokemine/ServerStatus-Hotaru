@@ -200,9 +200,9 @@ Installation_dependency() {
     else
       apt-get update -y
       if [ ${python_status} -eq 0 ]; then
-        apt-get -y install python unzip vim build-essential make
+        apt-get -y install python unzip vim build-essential
       else
-        apt-get -y install unzip vim build-essential make
+        apt-get -y install unzip vim build-essential
       fi
     fi
   else
@@ -211,18 +211,13 @@ Installation_dependency() {
         yum -y update
         yum -y install python
       fi
-      if [[ ${isVnstat} == [Yy] ]]; then
-        Install_vnStat
-      fi
     else
       if [ "${python_status}" -eq 0 ]; then
         apt-get -y update
         apt-get -y install python
       fi
-      if [[ ${isVnstat} == [Yy] ]]; then
-        Install_vnStat
-      fi
     fi
+    [[ ${isVnstat} == [Yy] ]] && Install_vnStat
   fi
 }
 Write_server_config() {
@@ -296,7 +291,7 @@ Set_server_http_port() {
     echo -e "请输入 ServerStatus 服务端中网站要设置的 域名/IP的端口[1-65535]（如果是域名的话，一般用 80 端口）"
     read -erp "(默认: 8888):" server_http_port_s
     [[ -z "$server_http_port_s" ]] && server_http_port_s="8888"
-    if [[ $server_http_port_s =~ ^[0-9]*$ ]]; then
+    if [[ "$server_http_port_s" =~ ^[0-9]*$ ]]; then
       if [[ ${server_http_port_s} -ge 1 ]] && [[ ${server_http_port_s} -le 65535 ]]; then
         echo && echo "	================================================"
         echo -e "	端口: ${Red_background_prefix} ${server_http_port_s} ${Font_color_suffix}"
@@ -688,11 +683,11 @@ Set_ServerStatus_client() {
 Install_vnStat() {
   if [[ ${release} == "centos" ]]; then
     yum -y update
-    yum -y install sqlite sqlite-devel make
+    yum -y install sqlite sqlite-devel
     yum -y groupinstall "Development Tools"
   else
     apt-get -y update
-    apt-get -y install sqlite3 libsqlite3-dev make build-essential
+    apt-get -y install sqlite3 libsqlite3-dev build-essential
   fi
   cd "/tmp" || return 1
   wget --no-check-certificate https://humdi.net/vnstat/vnstat-latest.tar.gz
@@ -700,21 +695,27 @@ Install_vnStat() {
   cd vnstat-*/ || return 1
   ./configure --prefix=/usr --sysconfdir=/etc && make && make install
   if ! vnstat -v >/dev/null 2>&1; then
-    echo "编译vnStat失败，请手动安装vnStat"
+    echo "编译安装vnStat失败，请手动安装vnStat"
     exit 1
   fi
   vnstatd -d
-  cp -v examples/systemd/simple/vnstat.service /etc/systemd/system/
-  systemctl enable vnstat
-  systemctl start vnstat
   if [[ ${release} == "centos" ]]; then
-    cp -v examples/init.d/redhat/vnstat /etc/init.d/
-    chkconfig vnstat on
-    service vnstat restart
+    if grep "6\..*" /etc/redhat-release | grep -i "centos" | grep -v "{^6}\.6" >/dev/null; then
+      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/redhat/vnstat /etc/init.d/
+      chkconfig vnstat on
+      service vnstat restart
+    fi
   else
-    cp -v examples/init.d/debian/vnstat /etc/init.d/
-    update-rc.d vnstat defaults
-    service vnstat restart
+    if grep -i "debian" /etc/issue | grep -q "7" || grep -i "ubuntu" /etc/issue | grep -q "14"; then
+      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/debian/vnstat /etc/init.d/
+      update-rc.d vnstat defaults
+      service vnstat restart
+    fi
+  fi
+  if [ ! -e /etc/init.d/vnstat ]; then
+    cp -v examples/systemd/simple/vnstat.service /etc/systemd/system/
+    systemctl enable vnstat
+    systemctl start vnstat
   fi
   rm -rf vnstat*
   cd ~ || exit
@@ -726,7 +727,7 @@ Modify_config_client_liuliang() {
     fi
     netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
     if [ -z "$netName" ]; then
-      echo "获取网卡名称失败，请在Github反馈"
+      echo -e "获取网卡名称失败，请在Github反馈"
       exit 1
     fi
     if [[ $netName =~ [[:space:]] ]]; then
@@ -739,39 +740,15 @@ Modify_config_client_liuliang() {
     done
     sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
     sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
-    service vnstat restart
     chmod -R 777 /var/lib/vnstat/
     service vnstat restart
-    if ! grep -q "vnstat" ${client_file}/status-client.py; then
+    if ! grep -q "NET_IN, NET_OUT = traffic.get_traffic_vnstat()" ${client_file}/status-client.py; then
       sed -i 's/\t/    /g' ${client_file}/status-client.py
-      vnstat_py="\
-    NET_IN = 0\n\
-    NET_OUT = 0\n\
-    vnstat = os.popen('vnstat --oneline b').readline()\n\
-    mdata = vnstat.split(';')\n\
-    NET_IN = int(mdata[8])\n\
-    NET_OUT = int(mdata[9])\n\
-    return NET_IN, NET_OUT"
-      sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
-      sed -i "/def\ liuliang():/a\\$vnstat_py" ${client_file}/status-client.py
+      sed -i 's/NET_IN, NET_OUT = traffic.get_traffic()/NET_IN, NET_OUT = traffic.get_traffic_vnstat()' ${client_file}/status-client.py
     fi
-  elif grep -q "vnstat" ${client_file}/status-client.py; then
+  elif grep -q "NET_IN, NET_OUT = traffic.get_traffic_vnstat()" ${client_file}/status-client.py; then
     sed -i 's/\t/    /g' ${client_file}/status-client.py
-    normal_py="\
-    NET_IN = 0\n\
-    NET_OUT = 0\n\
-    with open('/proc/net/dev') as f:\n\
-        for line in f.readlines():\n\
-            netinfo = re.findall('([^\\\s]+):[\\\s]{0,}(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)', line)\n\
-            if netinfo:\n\
-                if netinfo[0][0] == 'lo' or 'tun' in netinfo[0][0] or netinfo[0][1]=='0' or netinfo[0][9]=='0':\n\
-                    continue\n\
-                else:\n\
-                    NET_IN += int(netinfo[0][1])\n\
-                    NET_OUT += int(netinfo[0][9])\n\
-    return NET_IN, NET_OUT"
-    sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
-    sed -i "/def\ liuliang():/a\\$normal_py" ${client_file}/status-client.py
+    sed -i 's/NET_IN, NET_OUT = traffic.get_traffic_vnstat()/NET_IN, NET_OUT = traffic.get_traffic()' ${client_file}/status-client.py
   fi
 }
 Modify_config_client() {

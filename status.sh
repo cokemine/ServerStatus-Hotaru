@@ -744,11 +744,11 @@ Modify_config_client_liuliang() {
     service vnstat restart
     if ! grep -q "NET_IN, NET_OUT = traffic.get_traffic_vnstat()" ${client_file}/status-client.py; then
       sed -i 's/\t/    /g' ${client_file}/status-client.py
-      sed -i 's/NET_IN, NET_OUT = traffic.get_traffic()/NET_IN, NET_OUT = traffic.get_traffic_vnstat()' ${client_file}/status-client.py
+      sed -i 's/NET_IN, NET_OUT = traffic.get_traffic()/NET_IN, NET_OUT = traffic.get_traffic_vnstat()/' ${client_file}/status-client.py
     fi
   elif grep -q "NET_IN, NET_OUT = traffic.get_traffic_vnstat()" ${client_file}/status-client.py; then
     sed -i 's/\t/    /g' ${client_file}/status-client.py
-    sed -i 's/NET_IN, NET_OUT = traffic.get_traffic_vnstat()/NET_IN, NET_OUT = traffic.get_traffic()' ${client_file}/status-client.py
+    sed -i 's/NET_IN, NET_OUT = traffic.get_traffic_vnstat()/NET_IN, NET_OUT = traffic.get_traffic()/' ${client_file}/status-client.py
   fi
 }
 Modify_config_client() {

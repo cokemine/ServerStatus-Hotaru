@@ -217,7 +217,6 @@ Installation_dependency() {
         apt-get -y install python
       fi
     fi
-    [[ ${isVnstat} == [Yy] ]] && Install_vnStat
   fi
 }
 Write_server_config() {
@@ -722,10 +721,9 @@ Install_vnStat() {
   cd ~ || exit
 }
 Modify_config_client_traffic() {
-  if [[ ${isVnstat="y"} == [Yy] ]] && [[ ${client_vnstat="true"} == "true" ]]; then
-    if ! vnstat -v >/dev/null 2>&1; then
-      Install_vnStat
-    fi
+  [ -z ${isVnstat} ] && [[ ${client_vnstat} == "false" ]] && return
+  if [[ ${isVnstat="y"} == [Yy] ]]; then
+    vnstat -v >/dev/null 2>&1 || Install_vnStat
     netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
     if [ -z "$netName" ]; then
       echo -e "获取网卡名称失败，请在Github反馈"
@@ -903,8 +901,8 @@ Update_ServerStatus_client() {
   server_port_s="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   username_s="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"
   password_s="$(echo -e "${client_text}" | grep "PASSWORD=" | awk -F "=" '{print $2}')"
+  grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat="true" || client_vnstat="false"
   Download_Server_Status_client
-  Read_config_client
   Modify_config_client
   rm -rf /etc/init.d/status-client
   Service_Server_Status_client
@@ -1020,7 +1018,7 @@ View_ServerStatus_client() {
   端口 \t: ${Green_font_prefix}${client_port}${Font_color_suffix}
   账号 \t: ${Green_font_prefix}${client_user}${Font_color_suffix}
   密码 \t: ${Green_font_prefix}${client_password}${Font_color_suffix}
-  vnStat \t: ${Green_font_prefix}${client_vnstat}${Font_color_suffix}
+  vnStat : ${Green_font_prefix}${client_vnstat}${Font_color_suffix}
 
 ————————————————————"
 }

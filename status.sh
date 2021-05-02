@@ -1241,5 +1241,5 @@ if [[ -n $action ]]; then
     menu_client
   fi
 else
-  menu_server
+  menu_client
 fi

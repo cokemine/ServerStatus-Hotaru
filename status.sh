@@ -721,7 +721,7 @@ Install_vnStat() {
   cd ~ || exit
 }
 Modify_config_client_traffic() {
-  [ -z ${isVnstat} ] && [[ ${client_vnstat} == "false" ]] && return
+  [ -z ${isVnstat} ] && [[ ${client_vnstat_s} == "false" ]] && return
   if [[ ${isVnstat="y"} == [Yy] ]]; then
     vnstat -v >/dev/null 2>&1 || Install_vnStat
     netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
@@ -901,8 +901,9 @@ Update_ServerStatus_client() {
   server_port_s="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   username_s="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"
   password_s="$(echo -e "${client_text}" | grep "PASSWORD=" | awk -F "=" '{print $2}')"
-  grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat="true" || client_vnstat="false"
+  grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat_s="true" || client_vnstat_s="false"
   Download_Server_Status_client
+  Read_config_client
   Modify_config_client
   rm -rf /etc/init.d/status-client
   Service_Server_Status_client

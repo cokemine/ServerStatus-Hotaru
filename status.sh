@@ -5,11 +5,11 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: ServerStatus client + server
-#	Version: Test v0.1.1
+#	Version: Test v0.2.0
 #	Author: Toyo,Modified by APTX
 #=================================================
 
-sh_ver="0.1.1"
+sh_ver="0.2.0"
 filepath=$(
   cd "$(dirname "$0")" || exit
   pwd
@@ -21,10 +21,15 @@ server_file="/usr/local/ServerStatus/server"
 server_conf="/usr/local/ServerStatus/server/config.json"
 server_conf_1="/usr/local/ServerStatus/server/config.conf"
 client_file="/usr/local/ServerStatus/client"
+
 client_log_file="/tmp/serverstatus_client.log"
 server_log_file="/tmp/serverstatus_server.log"
 jq_file="${file}/jq"
 region_json="${file}/region.json"
+
+github_prefix="https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master"
+coding_prefix="https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/raw/master"
+link_prefix=${github_prefix}
 
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
 Info="${Green_font_prefix}[信息]${Font_color_suffix}"
@@ -80,11 +85,13 @@ check_region() {
 }
 Download_Server_Status_server() {
   cd "/tmp" || exit 1
-  wget -N --no-check-certificate "https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip"
+  [[ ${mirror_num} == 2 ]] && bundle_link="https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/archive/master/?download=true" || bundle_link="https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip"
+  wget -N --no-check-certificate "${bundle_link}" -O "master.zip"
   [[ ! -e "master.zip" ]] && echo -e "${Error} ServerStatus 服务端下载失败 !" && exit 1
   unzip master.zip
   rm -rf master.zip
-  [[ ! -e "/tmp/ServerStatus-Hotaru-master" ]] && echo -e "${Error} ServerStatus 服务端解压失败 !" && exit 1
+  [[ -d "/tmp/cokemine-hotarunet-ServerStatus-Hotaru-master" ]] && mv "/tmp/cokemine-hotarunet-ServerStatus-Hotaru-master" "/tmp/ServerStatus-Hotaru-master"
+  [[ ! -d "/tmp/ServerStatus-Hotaru-master" ]] && echo -e "${Error} ServerStatus 服务端解压失败 !" && exit 1
   cd "/tmp/ServerStatus-Hotaru-master/server" || exit 1
   make
   [[ ! -e "sergate" ]] && echo -e "${Error} ServerStatus 服务端编译失败 !" && cd "${file_1}" && rm -rf "/tmp/ServerStatus-Hotaru-master" && exit 1
@@ -117,7 +124,7 @@ Download_Server_Status_server() {
 }
 Download_Server_Status_client() {
   cd "/tmp" || exit 1
-  wget -N --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/clients/status-client.py"
+  wget -N --no-check-certificate "${link_prefix}/clients/status-client.py"
   [[ ! -e "status-client.py" ]] && echo -e "${Error} ServerStatus 客户端下载失败 !" && exit 1
   cd "${file_1}" || exit 1
   [[ ! -e "${file}" ]] && mkdir "${file}"
@@ -144,14 +151,14 @@ Download_Server_Status_client() {
 }
 Service_Server_Status_server() {
   if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_server_centos" -O /etc/init.d/status-server; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_centos" -O /etc/init.d/status-server; then
       echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-server
     chkconfig --add status-server
     chkconfig status-server on
   else
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_server_debian" -O /etc/init.d/status-server; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_debian" -O /etc/init.d/status-server; then
       echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-server
@@ -161,14 +168,14 @@ Service_Server_Status_server() {
 }
 Service_Server_Status_client() {
   if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_client_centos" -O /etc/init.d/status-client; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_centos" -O /etc/init.d/status-client; then
       echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-client
     chkconfig --add status-client
     chkconfig status-client on
   else
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_client_debian" -O /etc/init.d/status-client; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_debian" -O /etc/init.d/status-client; then
       echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-client
@@ -784,7 +791,7 @@ Install_caddy() {
     Set_server "server"
     Set_server_http_port
     if [[ ! -e "/usr/local/caddy/caddy" ]]; then
-      wget -N --no-check-certificate https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/caddy/caddy_install.sh
+      wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
       chmod +x caddy_install.sh
       bash caddy_install.sh install
       rm -rf caddy_install.sh
@@ -817,6 +824,7 @@ EOF
   fi
 }
 Install_ServerStatus_server() {
+  Set_Mirror
   [[ -e "${server_file}/sergate" ]] && echo -e "${Error} 检测到 ServerStatus 服务端已安装 !" && exit 1
   Set_server_port
   echo -e "${Info} 开始安装/配置 依赖..."
@@ -841,6 +849,7 @@ Install_ServerStatus_server() {
   Start_ServerStatus_server
 }
 Install_ServerStatus_client() {
+  Set_Mirror
   [[ -e "${client_file}/status-client.py" ]] && echo -e "${Error} 检测到 ServerStatus 客户端已安装 !" && exit 1
   check_sys
   if [[ ${release} == "centos" ]]; then
@@ -875,6 +884,7 @@ Install_ServerStatus_client() {
   Start_ServerStatus_client
 }
 Update_ServerStatus_server() {
+  Set_Mirror
   check_installed_server_status
   check_pid_server
   [[ -n ${PID} ]] && /etc/init.d/status-server stop
@@ -884,6 +894,7 @@ Update_ServerStatus_server() {
   Start_ServerStatus_server
 }
 Update_ServerStatus_client() {
+  Set_Mirror
   check_installed_client_status
   check_pid_client
   [[ -n ${PID} ]] && /etc/init.d/status-client stop
@@ -948,7 +959,7 @@ Uninstall_ServerStatus_server() {
     rm -rf "/etc/init.d/status-server"
     if [[ -e "/etc/init.d/caddy" ]]; then
       /etc/init.d/caddy stop
-      wget -N --no-check-certificate https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/caddy/caddy_install.sh
+      wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
       chmod +x caddy_install.sh
       bash caddy_install.sh uninstall
       rm -rf caddy_install.sh
@@ -1071,7 +1082,8 @@ Set_iptables() {
   fi
 }
 Update_Shell() {
-  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/status.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1)
+  Set_Mirror
+  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "${link_prefix}/status.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1)
   [[ -z ${sh_new_ver} ]] && echo -e "${Error} 无法链接到 Github !" && exit 0
   if [[ -e "/etc/init.d/status-client" ]]; then
     rm -rf /etc/init.d/status-client
@@ -1081,7 +1093,7 @@ Update_Shell() {
     rm -rf /etc/init.d/status-server
     Service_Server_Status_server
   fi
-  wget -N --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/status.sh" && chmod +x status.sh
+  wget -N --no-check-certificate "${link_prefix}/status.sh" && chmod +x status.sh
   echo -e "脚本已更新为最新版本[ ${sh_new_ver} ] !(注意：因为更新方式为直接覆盖当前运行的脚本，所以可能下面会提示一些报错，无视即可)" && exit 0
 }
 menu_client() {
@@ -1232,6 +1244,14 @@ menu_server() {
     echo "请输入正确数字 [0-10]"
     ;;
   esac
+}
+Set_Mirror() {
+    echo -e "${Info} 请输入要选择的下载源，默认使用GitHub，中国大陆建议选择Coding.net，但是不建议将服务端部署在中国大陆主机上
+  ${Green_font_prefix} 1.${Font_color_suffix} GitHub
+  ${Green_font_prefix} 2.${Font_color_suffix} Coding.net (服务端安装并非全部使用Coding.net仓库)"
+    read -erp "请输入数字 [1-2], 默认为 1:" mirror_num
+    [[ -z "${mirror_num}" ]] && mirror_num=1
+    [[ ${mirror_num} == 2 ]] && link_prefix=${coding_prefix} || link_prefix=${github_prefix}
 }
 check_sys
 action=$1

@@ -110,7 +110,14 @@ python3 status-psutil.py
 ![RktuH.png](https://img.ams1.imgbed.xyz/2021/02/04/1nfJF.png)
 
 ## 相关开源项目 ： 
-* ServerStatus-Toyo：https://github.com/ToyoDAdoubiBackup/ServerStatus-Toyo
-* ServerStatus：https://github.com/BotoX/ServerStatus
-* mojeda's ServerStatus: https://github.com/mojeda/ServerStatus
-* BlueVM's project: http://www.lowendtalk.com/discussion/comment/169690#Comment_169690
+* ServerStatus-Toyo：https://github.com/ToyoDAdoubiBackup/ServerStatus-Toyo MIT License
+* ServerStatus：https://github.com/BotoX/ServerStatus WTFPL License
+* mojeda's ServerStatus: https://github.com/mojeda/ServerStatus WTFPL License -> GNU GPLv3 License (ServerStatus is a full rewrite of mojeda's ServerStatus script and not affected by GPL)
+* BlueVM's project: http://www.lowendtalk.com/discussion/comment/169690#Comment_169690 WTFPL License
+
+## 感谢
+
+* i18n-iso-countries: https://github.com/michaelwittig/node-i18n-iso-countries MIT License (To convert country name in Chinese to iso 3166-1 and check if the code is valid)
+* jq: https://github.com/stedolan/jq CC BY 3.0 License
+* caddy: https://github.com/caddyserver/caddy Apache-2.0 License
+

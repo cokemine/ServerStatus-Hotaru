@@ -5,11 +5,11 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: ServerStatus client + server
-#	Version: Test v0.1.1
+#	Version: Test v0.2.0
 #	Author: Toyo,Modified by APTX
 #=================================================
 
-sh_ver="0.1.1"
+sh_ver="0.2.0"
 filepath=$(
   cd "$(dirname "$0")" || exit
   pwd
@@ -21,9 +21,15 @@ server_file="/usr/local/ServerStatus/server"
 server_conf="/usr/local/ServerStatus/server/config.json"
 server_conf_1="/usr/local/ServerStatus/server/config.conf"
 client_file="/usr/local/ServerStatus/client"
+
 client_log_file="/tmp/serverstatus_client.log"
 server_log_file="/tmp/serverstatus_server.log"
 jq_file="${file}/jq"
+region_json="${file}/region.json"
+
+github_prefix="https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master"
+coding_prefix="https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/raw/master"
+link_prefix=${github_prefix}
 
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
 Info="${Green_font_prefix}[信息]${Font_color_suffix}"
@@ -67,29 +73,43 @@ check_pid_client() {
   #PID=$(ps -ef | grep "status-client.py" | grep -v grep | grep -v ".sh" | grep -v "init.d" | grep -v "service" | awk '{print $2}')
   PID=$(pgrep -f "status-client.py")
 }
+check_region() {
+  if ${jq_file} "[.countries | has(\"${region_s}}\")]" "${region_json}" | grep -q 'true' >/dev/null 2>&1; then
+    return 0
+  elif grep -qw "${region_s}" "${region_json}"; then
+    region_s=$(grep -w "${region_s}" "${region_json}" | sed "s/[[:space:]]//g")
+    region_s=${region_s:1:2}
+    return 0
+  fi
+  return 1
+}
 Download_Server_Status_server() {
-  cd "/tmp" || exit
-  wget -N --no-check-certificate "https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip"
+  cd "/tmp" || exit 1
+  [[ ${mirror_num} == 2 ]] && bundle_link="https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/archive/master/?download=true" || bundle_link="https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip"
+  wget -N --no-check-certificate "${bundle_link}" -O "master.zip"
   [[ ! -e "master.zip" ]] && echo -e "${Error} ServerStatus 服务端下载失败 !" && exit 1
   unzip master.zip
   rm -rf master.zip
-  [[ ! -e "/tmp/ServerStatus-Hotaru-master" ]] && echo -e "${Error} ServerStatus 服务端解压失败 !" && exit 1
-  cd "/tmp/ServerStatus-Hotaru-master/server" || exit
+  [[ -d "/tmp/cokemine-hotarunet-ServerStatus-Hotaru-master" ]] && mv "/tmp/cokemine-hotarunet-ServerStatus-Hotaru-master" "/tmp/ServerStatus-Hotaru-master"
+  [[ ! -d "/tmp/ServerStatus-Hotaru-master" ]] && echo -e "${Error} ServerStatus 服务端解压失败 !" && exit 1
+  cd "/tmp/ServerStatus-Hotaru-master/server" || exit 1
   make
   [[ ! -e "sergate" ]] && echo -e "${Error} ServerStatus 服务端编译失败 !" && cd "${file_1}" && rm -rf "/tmp/ServerStatus-Hotaru-master" && exit 1
-  cd "${file_1}" || exit
+  cd "${file_1}" || exit 1
   [[ ! -e "${file}" ]] && mkdir "${file}"
   if [[ ! -e "${server_file}" ]]; then
     mkdir "${server_file}"
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-    mv "/tmp/ServerStatus-Hotaru-master/web" "${web_file}"
+    wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+    unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
   else
     if [[ -e "${server_file}/sergate" ]]; then
       mv "${server_file}/sergate" "${server_file}/sergate1"
       mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
     else
       mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-      mv "/tmp/ServerStatus-Hotaru-master/web" "${web_file}"
+      wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+      unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
     fi
   fi
   if [[ ! -e "${server_file}/sergate" ]]; then
@@ -103,10 +123,10 @@ Download_Server_Status_server() {
   fi
 }
 Download_Server_Status_client() {
-  cd "/tmp" || mkdir "/tmp"
-  wget -N --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/clients/status-client.py"
+  cd "/tmp" || exit 1
+  wget -N --no-check-certificate "${link_prefix}/clients/status-client.py"
   [[ ! -e "status-client.py" ]] && echo -e "${Error} ServerStatus 客户端下载失败 !" && exit 1
-  cd "${file_1}" || exit
+  cd "${file_1}" || exit 1
   [[ ! -e "${file}" ]] && mkdir "${file}"
   if [[ ! -e "${client_file}" ]]; then
     mkdir "${client_file}"
@@ -131,14 +151,14 @@ Download_Server_Status_client() {
 }
 Service_Server_Status_server() {
   if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_server_centos" -O /etc/init.d/status-server; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_centos" -O /etc/init.d/status-server; then
       echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-server
     chkconfig --add status-server
     chkconfig status-server on
   else
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_server_debian" -O /etc/init.d/status-server; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_debian" -O /etc/init.d/status-server; then
       echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-server
@@ -148,14 +168,14 @@ Service_Server_Status_server() {
 }
 Service_Server_Status_client() {
   if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_client_centos" -O /etc/init.d/status-client; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_centos" -O /etc/init.d/status-client; then
       echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-client
     chkconfig --add status-client
     chkconfig status-client on
   else
-    if ! wget --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/service/server_status_client_debian" -O /etc/init.d/status-client; then
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_debian" -O /etc/init.d/status-client; then
       echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-client
@@ -187,9 +207,9 @@ Installation_dependency() {
     else
       apt-get update -y
       if [ ${python_status} -eq 0 ]; then
-        apt-get -y install python unzip vim build-essential make
+        apt-get -y install python unzip vim build-essential
       else
-        apt-get -y install unzip vim build-essential make
+        apt-get -y install unzip vim build-essential
       fi
     fi
   else
@@ -198,16 +218,10 @@ Installation_dependency() {
         yum -y update
         yum -y install python
       fi
-      if [[ ${isVnstat} == [Yy] ]]; then
-        Install_vnStat
-      fi
     else
       if [ "${python_status}" -eq 0 ]; then
         apt-get -y update
         apt-get -y install python
-      fi
-      if [[ ${isVnstat} == [Yy] ]]; then
-        Install_vnStat
       fi
     fi
   fi
@@ -250,6 +264,7 @@ Read_config_client() {
   client_port="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   client_user="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"
   client_password="$(echo -e "${client_text}" | grep "PASSWORD=" | awk -F "=" '{print $2}')"
+  grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat="true" || client_vnstat="false"
 }
 Read_config_server() {
   if [[ ! -e "${server_conf_1}" ]]; then
@@ -283,7 +298,7 @@ Set_server_http_port() {
     echo -e "请输入 ServerStatus 服务端中网站要设置的 域名/IP的端口[1-65535]（如果是域名的话，一般用 80 端口）"
     read -erp "(默认: 8888):" server_http_port_s
     [[ -z "$server_http_port_s" ]] && server_http_port_s="8888"
-    if [[ $server_http_port_s =~ ^[0-9]*$ ]]; then
+    if [[ "$server_http_port_s" =~ ^[0-9]*$ ]]; then
       if [[ ${server_http_port_s} -ge 1 ]] && [[ ${server_http_port_s} -le 65535 ]]; then
         echo && echo "	================================================"
         echo -e "	端口: ${Red_background_prefix} ${server_http_port_s} ${Font_color_suffix}"
@@ -374,11 +389,14 @@ Set_location() {
   echo "	================================================" && echo
 }
 Set_region() {
-  echo -e "请输入 ServerStatus 服务端要设置的节点区域[region]（用于国旗/区旗图片显示）"
+  echo -e "请输入 ServerStatus 服务端要设置的节点地区[region]（用于国家/地区的旗帜图标显示）"
   read -erp "(默认: HK):" region_s
   [[ -z "$region_s" ]] && region_s="HK"
+  while ! check_region; do
+    read -erp "你输入的节点地区不合法，请重新输入：" region_s
+  done
   echo && echo "	================================================"
-  echo -e "	节点位置[region]: ${Red_background_prefix} ${region_s} ${Font_color_suffix}"
+  echo -e "	节点地区[region]: ${Red_background_prefix} ${region_s} ${Font_color_suffix}"
   echo "	================================================" && echo
 }
 Set_config_server() {
@@ -399,7 +417,7 @@ Set_config_client() {
 Set_ServerStatus_server() {
   check_installed_server_status
   echo && echo -e " 你要做什么？
-	
+
  ${Green_font_prefix} 1.${Font_color_suffix} 添加 节点配置
  ${Green_font_prefix} 2.${Font_color_suffix} 删除 节点配置
 ————————
@@ -601,7 +619,7 @@ Modify_ServerStatus_server_region() {
     Set_region_num_a=$((Set_username_num + 7))
     Set_region_num_a_text=$(sed -n "${Set_region_num_a}p" ${server_conf} | sed 's/\"//g;s/,$//g' | awk -F ": " '{print $2}')
     sed -i "${Set_region_num_a}"'s/"region": "'"${Set_region_num_a_text}"'"/"region": "'"${region_s}"'"/g' ${server_conf}
-    echo -e "${Info} 修改成功 [ 原节点区域: ${Set_region_num_a_text}, 新节点区域: ${region_s} ]"
+    echo -e "${Info} 修改成功 [ 原节点地区: ${Set_region_num_a_text}, 新节点地区: ${region_s} ]"
   else
     echo -e "${Error} 请输入正确的节点用户名 !" && exit 1
   fi
@@ -672,88 +690,71 @@ Set_ServerStatus_client() {
 Install_vnStat() {
   if [[ ${release} == "centos" ]]; then
     yum -y update
-    yum -y install sqlite sqlite-devel make
+    yum -y install sqlite sqlite-devel
     yum -y groupinstall "Development Tools"
   else
     apt-get -y update
-    apt-get -y install sqlite3 libsqlite3-dev make build-essential
+    apt-get -y install sqlite3 libsqlite3-dev build-essential
   fi
+  cd "/tmp" || return 1
   wget --no-check-certificate https://humdi.net/vnstat/vnstat-latest.tar.gz
   tar zxvf vnstat-latest.tar.gz
-  cd vnstat-*/ || return
+  cd vnstat-*/ || return 1
   ./configure --prefix=/usr --sysconfdir=/etc && make && make install
   if ! vnstat -v >/dev/null 2>&1; then
-    echo "编译vnStat失败，请手动安装vnStat"
+    echo "编译安装vnStat失败，请手动安装vnStat"
     exit 1
   fi
   vnstatd -d
-  cp -v examples/systemd/simple/vnstat.service /etc/systemd/system/
-  systemctl enable vnstat
-  systemctl start vnstat
   if [[ ${release} == "centos" ]]; then
-    cp -v examples/init.d/redhat/vnstat /etc/init.d/
-    chkconfig vnstat on
-    service vnstat restart
-  else
-    cp -v examples/init.d/debian/vnstat /etc/init.d/
-    update-rc.d vnstat defaults
-    service vnstat restart
-  fi
-}
-Modify_config_client_liuliang() {
-  if [[ ${isVnstat} == [Yy] ]]; then
-    if ! vnstat -v >/dev/null 2>&1; then
-      Install_vnStat
-    else
-      netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
-      if [ -z "$netName" ]; then
-        echo "获取网卡名称失败，请在Github反馈"
-        exit 1
-      fi
-      if [[ $netName =~ [[:space:]] ]]; then
-        read -erp "检测到多个网卡: ${netName}，请手动输入网卡名称" netName
-      fi
-      read -erp "请输入每月流量归零的日期(1~28)，默认为1(即每月1日): " time_N
-      [[ -z "$time_N" ]] && time_N="1"
-      while ! [[ $time_N =~ ^[0-9]*$ ]] || ((time_N < 1 || time_N > 28)); do
-        read -erp "你输入的日期不合法，请重新输入: " time_N
-      done
-      sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
-      sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
+    if grep "6\..*" /etc/redhat-release | grep -i "centos" | grep -v "{^6}\.6" >/dev/null; then
+      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/redhat/vnstat /etc/init.d/
+      chkconfig vnstat on
       service vnstat restart
-      chmod -R 777 /var/lib/vnstat/
-      service vnstat restart
-      if ! grep -q "vnstat" ${client_file}/status-client.py; then
-        sed -i 's/\t/    /g' ${client_file}/status-client.py
-        vnstat_py="\
-    NET_IN = 0\n\
-    NET_OUT = 0\n\
-    vnstat = os.popen('vnstat --oneline b').readline()\n\
-    mdata = vnstat.split(';')\n\
-    NET_IN = int(mdata[8])\n\
-    NET_OUT = int(mdata[9])\n\
-    return NET_IN, NET_OUT"
-        sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
-        sed -i "/def\ liuliang():/a\\$vnstat_py" ${client_file}/status-client.py
-      fi
     fi
-  elif grep -q "vnstat" ${client_file}/status-client.py; then
+  else
+    if grep -i "debian" /etc/issue | grep -q "7" || grep -i "ubuntu" /etc/issue | grep -q "14"; then
+      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/debian/vnstat /etc/init.d/
+      update-rc.d vnstat defaults
+      service vnstat restart
+    fi
+  fi
+  if [ ! -e /etc/init.d/vnstat ]; then
+    cp -v examples/systemd/simple/vnstat.service /etc/systemd/system/
+    systemctl enable vnstat
+    systemctl start vnstat
+  fi
+  rm -rf vnstat*
+  cd ~ || exit
+}
+Modify_config_client_traffic() {
+  [ -z ${isVnstat} ] && [[ ${client_vnstat_s} == "false" ]] && return
+  if [[ ${isVnstat="y"} == [Yy] ]]; then
+    vnstat -v >/dev/null 2>&1 || Install_vnStat
+    netName=$(awk '{i++; if( i>2 && ($2 != 0 && $10 != 0) ){print $1}}' /proc/net/dev | sed 's/^lo:$//g' | sed 's/^tun:$//g' | sed '/^$/d' | sed 's/^[\t]*//g' | sed 's/[:]*$//g')
+    if [ -z "$netName" ]; then
+      echo -e "获取网卡名称失败，请在Github反馈"
+      exit 1
+    fi
+    if [[ $netName =~ [[:space:]] ]]; then
+      read -erp "检测到多个网卡: ${netName}，请手动输入网卡名称" netName
+    fi
+    read -erp "请输入每月流量归零的日期(1~28)，默认为1(即每月1日): " time_N
+    [[ -z "$time_N" ]] && time_N="1"
+    while ! [[ $time_N =~ ^[0-9]*$ ]] || ((time_N < 1 || time_N > 28)); do
+      read -erp "你输入的日期不合法，请重新输入: " time_N
+    done
+    sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
+    sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
+    chmod -R 777 /var/lib/vnstat/
+    service vnstat restart
+    if ! grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" ${client_file}/status-client.py; then
+      sed -i 's/\t/    /g' ${client_file}/status-client.py
+      sed -i 's/NET_IN, NET_OUT = traffic.get_traffic()/NET_IN, NET_OUT = get_traffic_vnstat()/' ${client_file}/status-client.py
+    fi
+  elif grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" ${client_file}/status-client.py; then
     sed -i 's/\t/    /g' ${client_file}/status-client.py
-    normal_py="\
-    NET_IN = 0\n\
-    NET_OUT = 0\n\
-    with open('/proc/net/dev') as f:\n\
-        for line in f.readlines():\n\
-            netinfo = re.findall('([^\\\s]+):[\\\s]{0,}(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)\\\s+(\\\d+)', line)\n\
-            if netinfo:\n\
-                if netinfo[0][0] == 'lo' or 'tun' in netinfo[0][0] or netinfo[0][1]=='0' or netinfo[0][9]=='0':\n\
-                    continue\n\
-                else:\n\
-                    NET_IN += int(netinfo[0][1])\n\
-                    NET_OUT += int(netinfo[0][9])\n\
-    return NET_IN, NET_OUT"
-    sed -i "/NET_IN\ =\ 0/,/return\ NET_IN/d" ${client_file}/status-client.py
-    sed -i "/def\ liuliang():/a\\$normal_py" ${client_file}/status-client.py
+    sed -i 's/NET_IN, NET_OUT = get_traffic_vnstat()/NET_IN, NET_OUT = traffic.get_traffic()/' ${client_file}/status-client.py
   fi
 }
 Modify_config_client() {
@@ -761,17 +762,7 @@ Modify_config_client() {
   sed -i "s/PORT = ${client_port}/PORT = ${server_port_s}/g" "${client_file}/status-client.py"
   sed -i 's/USER = "'"${client_user}"'"/USER = "'"${username_s}"'"/g' "${client_file}/status-client.py"
   sed -i 's/PASSWORD = "'"${client_password}"'"/PASSWORD = "'"${password_s}"'"/g' "${client_file}/status-client.py"
-  if [[ "$server_s" =~ ^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$ ]]; then
-    isIpv6=1
-  else
-    isIpv6=0
-  fi
-  if [ $isIpv6 -eq 1 ]; then
-    sed -i 's/AF_INET/AF_INET6/g' "${client_file}/status-client.py"
-  else
-    sed -i 's/AF_INET6/AF_INET/g' "${client_file}/status-client.py"
-  fi
-  Modify_config_client_liuliang
+  Modify_config_client_traffic
 }
 Install_jq() {
   if [[ ! -e ${jq_file} ]]; then
@@ -786,6 +777,10 @@ Install_jq() {
   else
     echo -e "${Info} JQ解析器 已安装，继续..."
   fi
+  if [[ ! -e ${region_json} ]]; then
+    wget --no-check-certificate "https://raw.githubusercontent.com/michaelwittig/node-i18n-iso-countries/master/langs/zh.json" -O ${region_json}
+    [[ ! -e ${region_json} ]] && echo -e "${Error} ISO 3166-1 json文件下载失败，请检查！" && exit 1
+  fi
 }
 Install_caddy() {
   echo
@@ -796,7 +791,7 @@ Install_caddy() {
     Set_server "server"
     Set_server_http_port
     if [[ ! -e "/usr/local/caddy/caddy" ]]; then
-      wget -N --no-check-certificate https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/caddy/caddy_install.sh
+      wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
       chmod +x caddy_install.sh
       bash caddy_install.sh install
       rm -rf caddy_install.sh
@@ -829,6 +824,7 @@ EOF
   fi
 }
 Install_ServerStatus_server() {
+  Set_Mirror
   [[ -e "${server_file}/sergate" ]] && echo -e "${Error} 检测到 ServerStatus 服务端已安装 !" && exit 1
   Set_server_port
   echo -e "${Info} 开始安装/配置 依赖..."
@@ -853,6 +849,7 @@ Install_ServerStatus_server() {
   Start_ServerStatus_server
 }
 Install_ServerStatus_client() {
+  Set_Mirror
   [[ -e "${client_file}/status-client.py" ]] && echo -e "${Error} 检测到 ServerStatus 客户端已安装 !" && exit 1
   check_sys
   if [[ ${release} == "centos" ]]; then
@@ -887,6 +884,7 @@ Install_ServerStatus_client() {
   Start_ServerStatus_client
 }
 Update_ServerStatus_server() {
+  Set_Mirror
   check_installed_server_status
   check_pid_server
   [[ -n ${PID} ]] && /etc/init.d/status-server stop
@@ -896,6 +894,7 @@ Update_ServerStatus_server() {
   Start_ServerStatus_server
 }
 Update_ServerStatus_client() {
+  Set_Mirror
   check_installed_client_status
   check_pid_client
   [[ -n ${PID} ]] && /etc/init.d/status-client stop
@@ -913,6 +912,7 @@ Update_ServerStatus_client() {
   server_port_s="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   username_s="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"
   password_s="$(echo -e "${client_text}" | grep "PASSWORD=" | awk -F "=" '{print $2}')"
+  grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" "${client_file}/status-client.py" && client_vnstat_s="true" || client_vnstat_s="false"
   Download_Server_Status_client
   Read_config_client
   Modify_config_client
@@ -959,7 +959,7 @@ Uninstall_ServerStatus_server() {
     rm -rf "/etc/init.d/status-server"
     if [[ -e "/etc/init.d/caddy" ]]; then
       /etc/init.d/caddy stop
-      wget -N --no-check-certificate https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/caddy/caddy_install.sh
+      wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
       chmod +x caddy_install.sh
       bash caddy_install.sh uninstall
       rm -rf caddy_install.sh
@@ -1025,12 +1025,13 @@ View_ServerStatus_client() {
   Read_config_client
   clear && echo "————————————————————" && echo
   echo -e "  ServerStatus 客户端配置信息：
- 
+
   IP \t: ${Green_font_prefix}${client_server}${Font_color_suffix}
   端口 \t: ${Green_font_prefix}${client_port}${Font_color_suffix}
   账号 \t: ${Green_font_prefix}${client_user}${Font_color_suffix}
   密码 \t: ${Green_font_prefix}${client_password}${Font_color_suffix}
- 
+  vnStat : ${Green_font_prefix}${client_vnstat}${Font_color_suffix}
+
 ————————————————————"
 }
 View_client_Log() {
@@ -1081,7 +1082,8 @@ Set_iptables() {
   fi
 }
 Update_Shell() {
-  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/status.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1)
+  Set_Mirror
+  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "${link_prefix}/status.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1)
   [[ -z ${sh_new_ver} ]] && echo -e "${Error} 无法链接到 Github !" && exit 0
   if [[ -e "/etc/init.d/status-client" ]]; then
     rm -rf /etc/init.d/status-client
@@ -1091,7 +1093,7 @@ Update_Shell() {
     rm -rf /etc/init.d/status-server
     Service_Server_Status_server
   fi
-  wget -N --no-check-certificate "https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/status.sh" && chmod +x status.sh
+  wget -N --no-check-certificate "${link_prefix}/status.sh" && chmod +x status.sh
   echo -e "脚本已更新为最新版本[ ${sh_new_ver} ] !(注意：因为更新方式为直接覆盖当前运行的脚本，所以可能下面会提示一些报错，无视即可)" && exit 0
 }
 menu_client() {
@@ -1243,6 +1245,14 @@ menu_server() {
     ;;
   esac
 }
+Set_Mirror() {
+    echo -e "${Info} 请输入要选择的下载源，默认使用GitHub，中国大陆建议选择Coding.net，但是不建议将服务端部署在中国大陆主机上
+  ${Green_font_prefix} 1.${Font_color_suffix} GitHub
+  ${Green_font_prefix} 2.${Font_color_suffix} Coding.net (服务端安装并非全部使用Coding.net仓库)"
+    read -erp "请输入数字 [1-2], 默认为 1:" mirror_num
+    [[ -z "${mirror_num}" ]] && mirror_num=1
+    [[ ${mirror_num} == 2 ]] && link_prefix=${coding_prefix} || link_prefix=${github_prefix}
+}
 check_sys
 action=$1
 if [[ -n $action ]]; then
@@ -1252,5 +1262,5 @@ if [[ -n $action ]]; then
     menu_client
   fi
 else
-  menu_server
+  menu_client
 fi

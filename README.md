@@ -1,19 +1,27 @@
 # ServerStatus-Hotaru
 云探针、多服务器探针、云监控、多服务器云监控
 
-基于ServerStatus-Toyo最新版本稍作修改，不太会脚本什么的，前端也垃圾。见谅
+基于ServerStatus-Toyo最新版本稍作修改，不太会脚本什么的，前端也垃圾。见谅。
 
-Test v0.022：头图来源：Pixiv：72725286
+默认图片素材来源: Pixiv:  86597206 默认背景来源：nisekoi.jp
+
+如需用做商业用途请更换主题图片。
+
+For commercial use, please replace the images.
+
+若本仓库用到的一些素材侵犯了您的版权，请联系我处理，谢谢。
+
+If some of the assets used in this repo infringe your copyright, please contact me, thanks.
 
 ## 特性
 
-模板来自：<https://www.hostloc.com/thread-494384-1-1.html>
+前端基于Vue 3.0和SemanticUI制作，如需修改前端建议自行修改打包（也可以尝试直接格式化打包后的js/css文件后修改，但是不建议）：
 
-以及：<https://www.hostloc.com/thread-493783-1-1.html>
-
-稍作修改，多了个Region调用国家/地区旗帜。
+前端开源地址：https://github.com/CokeMine/Hotaru_theme
 
 客户端支持Python版本：Python2.7 - Python3.7
+
+客户端可以选择使用vnStat按月计算流量，会自动编译安装最新版本vnStat。如不使用vnStat，则默认计算流量方式为重启后流量清零。
 
 ## 安装方法
 
@@ -23,6 +31,7 @@ Test v0.022：头图来源：Pixiv：72725286
 
 ```bash
 wget https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/status.sh
+# wget https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/raw/master/status.sh 若服务器位于中国大陆建议选择Coding.net仓库
 bash status.sh s
 ```
 
@@ -46,28 +55,34 @@ bash status.sh c
    "type": "KVM",
    "host": "None",
    "location": "洛杉矶",
-   "disabled": false ,
+   "disabled": false,
    "region": "US"
-  },
+},
 ```
 
 替换配置文件，重启ServerStatus
 
 ## 手动安装服务端
 
-```
-apt install wget unzip curl make build-essential
+```bash
+mkdir -p /usr/local/ServerStatus/server
+apt install wget unzip curl vim build-essential
+cd /tmp
 wget https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip
 unzip master.zip
-cd /root/ServerStatus-Hotaru-master/server
-make #手动编译生成二进制文件
+cd ./ServerStatus-Hotaru-master/server
+make #编译生成二进制文件
 chmod +x sergate
-vim config.json #修改配置文件
-cp -r ../web/* /home/wwwroot/public #此为站点根目录，请自行设置
-./sergate --config=config.json --web-dir=/home/wwwroot/public
+mv sergate /usr/local/ServerStatus/server
+vim /usr/local/ServerStatus/server/config.json #修改配置文件
+#下载前端
+cd /tmp && wget https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+unzip hotaru-theme.zip
+mv ./hotaru-theme /usr/local/ServerStatus/web #此为站点根目录，请自行设置
+nohup ./sergate --config=config.json --web-dir=/usr/local/ServerStatus/web --port=35601 > /tmp/serverstatus_server.log 2>&1 & #默认端口35601
 ```
 
-## Psutil版
+## Psutil版客户端
 
 使用Psutil版即可使ServerStatus客户端在Windows等平台运行
 
@@ -79,32 +94,30 @@ python pip install psutil
 python status-psutil.py
 ```
 
-Linux：
+Linux版客户端支持绝大部分Linux发行版系统，一般不需要使用`psutil`
 
-```
+```bash
 apt install python3 python3-pip wget
 pip3 install psutil
 wget https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/clients/status-psutil.py
 vim status-psutil.py #修改客户端配置文件
 python3 status-psutil.py
+# https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master/clients/status-client.py 默认版本无需psutil依赖
 ```
-
-## Darkmode
-
-前端已支持Darkmode，点击页面右下角小图标即可切换Darkmode（样式可能不尽如人意，各位有更好的样式或实现方法欢迎提交PR）默认不开启。
-
-如何启动Darkmode：去掉index.html第99行注释即可
 
 ## 效果演示
 
-![](https://i.loli.net/2019/04/05/5ca74fb05338f.png)
-
-![](https://i.loli.net/2019/04/05/5ca74fc86db96.png)
-
-前端欢迎自定义。
+![RktuH.png](https://img.ams1.imgbed.xyz/2021/02/04/1nfJF.png)
 
 ## 相关开源项目 ： 
-* ServerStatus-Toyo：https://github.com/ToyoDAdoubiBackup/ServerStatus-Toyo
-* ServerStatus：https://github.com/BotoX/ServerStatus
-* mojeda's ServerStatus: https://github.com/mojeda/ServerStatus
-* BlueVM's project: http://www.lowendtalk.com/discussion/comment/169690#Comment_169690
+* ServerStatus-Toyo：https://github.com/ToyoDAdoubiBackup/ServerStatus-Toyo MIT License
+* ServerStatus：https://github.com/BotoX/ServerStatus WTFPL License
+* mojeda's ServerStatus: https://github.com/mojeda/ServerStatus WTFPL License -> GNU GPLv3 License (ServerStatus is a full rewrite of mojeda's ServerStatus script and not affected by GPL)
+* BlueVM's project: http://www.lowendtalk.com/discussion/comment/169690#Comment_169690 WTFPL License
+
+## 感谢
+
+* i18n-iso-countries: https://github.com/michaelwittig/node-i18n-iso-countries MIT License (To convert country name in Chinese to iso 3166-1 and check if the code is valid)
+* jq: https://github.com/stedolan/jq CC BY 3.0 License
+* caddy: https://github.com/caddyserver/caddy Apache-2.0 License
+

@@ -71,7 +71,7 @@ class Traffic:
         self.tx = collections.deque(maxlen=10)
 
     def get(self):
-        avgrx = 0;
+        avgrx = 0
         avgtx = 0
         for name, stats in psutil.net_io_counters(pernic=True).items():
             if name == "lo" or name.find("tun") > -1:
@@ -81,7 +81,7 @@ class Traffic:
 
         self.rx.append(avgrx)
         self.tx.append(avgtx)
-        avgrx = 0;
+        avgrx = 0
         avgtx = 0
 
         l = len(self.rx)
@@ -113,8 +113,10 @@ def get_network(ip_version):
         HOST = "ipv4.google.com"
     elif (ip_version == 6):
         HOST = "ipv6.google.com"
+    else:
+        return False
     try:
-        s = socket.create_connection((HOST, 80), 2)
+        s = socket.create_connection((HOST, 80), 2).close()
         return True
     except:
         pass
@@ -123,11 +125,10 @@ def get_network(ip_version):
 
 if __name__ == '__main__':
     socket.setdefaulttimeout(30)
-    while 1:
+    while True:
         try:
             print("Connecting...")
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((SERVER, PORT))
+            s = socket.create_connection((SERVER, PORT))
             data = s.recv(1024).decode()
             if data.find("Authentication required") > -1:
                 s.send((USER + ':' + PASSWORD + '\n').encode("utf-8"))
@@ -155,7 +156,7 @@ if __name__ == '__main__':
 
             traffic = Traffic()
             traffic.get()
-            while 1:
+            while True:
                 CPU = get_cpu()
                 NetRx, NetTx = traffic.get()
                 NET_IN, NET_OUT = liuliang()
@@ -192,9 +193,11 @@ if __name__ == '__main__':
         except socket.error:
             print("Disconnected...")
             # keep on trying after a disconnect
-            s.close()
+            if 's' in locals().keys():
+                del s
             time.sleep(3)
         except Exception as e:
             print("Caught Exception:", e)
-            s.close()
+            if 's' in locals().keys():
+                del s
             time.sleep(3)

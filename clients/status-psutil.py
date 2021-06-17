@@ -4,20 +4,23 @@
 # 支持Python版本：2.6 to 3.7
 # 支持操作系统： Linux, Windows, OSX, Sun Solaris, FreeBSD, OpenBSD and NetBSD, both 32-bit and 64-bit architectures
 
+import socket
+import time
+import json
+import psutil
+from collections import deque
+
 SERVER = "127.0.0.1"
 PORT = 35601
 USER = "USER"
 PASSWORD = "USER_PASSWORD"
 INTERVAL = 1  # 更新间隔，单位：秒
 
-import socket
-import time
-import string
-import math
-import os
-import json
-import collections
-import psutil
+
+def check_interface(net_name):
+    net_name = net_name.strip()
+    invalid_name = ['lo', 'tun', 'kube', 'docker', 'vmbr', 'br-', 'vnet', 'veth']
+    return not any(name in net_name for name in invalid_name)
 
 
 def get_uptime():
@@ -25,27 +28,19 @@ def get_uptime():
 
 
 def get_memory():
-    Mem = psutil.virtual_memory()
-    try:
-        MemUsed = Mem.total - (Mem.cached + Mem.free)
-    except:
-        MemUsed = Mem.total - Mem.free
-    return int(Mem.total / 1024.0), int(MemUsed / 1024.0)
-
-
-def get_swap():
-    Mem = psutil.swap_memory()
-    return int(Mem.total / 1024.0), int(Mem.used / 1024.0)
+    mem = psutil.virtual_memory()
+    swap = psutil.swap_memory()
+    return int(mem.total / 1024.0), int(mem.used / 1024.0), int(swap.total / 1024.0), int(swap.used / 1024.0)
 
 
 def get_hdd():
-    valid_fs = ["ext4", "ext3", "ext2", "reiserfs", "jfs", "btrfs", "fuseblk", "zfs", "simfs", "ntfs", "fat32", "exfat",
-                "xfs"]
+    valid_fs = ['ext4', 'ext3', 'ext2', 'reiserfs', 'jfs', 'btrfs', 'fuseblk', 'zfs', 'simfs', 'ntfs', 'fat32', 'exfat',
+                'xfs']
     disks = dict()
     size = 0
     used = 0
     for disk in psutil.disk_partitions():
-        if not disk.device in disks and disk.fstype.lower() in valid_fs:
+        if disk.device not in disks and disk.fstype.lower() in valid_fs:
             disks[disk.device] = disk.mountpoint
     for disk in disks.values():
         usage = psutil.disk_usage(disk)
@@ -56,8 +51,8 @@ def get_hdd():
 
 def get_load():
     try:
-        return round(os.getloadavg()[0] * 2) / 2
-    except:
+        return round(psutil.getloadavg()[0], 1)
+    except Exception:
         return -1.0
 
 
@@ -65,62 +60,52 @@ def get_cpu():
     return psutil.cpu_percent(interval=INTERVAL)
 
 
-class Traffic:
+class Network:
     def __init__(self):
-        self.rx = collections.deque(maxlen=10)
-        self.tx = collections.deque(maxlen=10)
+        self.rx = deque(maxlen=10)
+        self.tx = deque(maxlen=10)
+        self._get_traffic()
 
-    def get(self):
-        avgrx = 0
-        avgtx = 0
-        for name, stats in psutil.net_io_counters(pernic=True).items():
-            if name == "lo" or name.find("tun") > -1:
-                continue
-            avgrx += stats.bytes_recv
-            avgtx += stats.bytes_sent
+    def _get_traffic(self):
+        net_in = 0
+        net_out = 0
+        net = psutil.net_io_counters(pernic=True)
+        for k, v in net.items():
+            if check_interface(k):
+                net_in += v[1]
+                net_out += v[0]
+        self.rx.append(net_in)
+        self.tx.append(net_out)
 
-        self.rx.append(avgrx)
-        self.tx.append(avgtx)
-        avgrx = 0
-        avgtx = 0
+    def get_speed(self):
+        self._get_traffic()
+        avg_rx = 0
+        avg_tx = 0
+        queue_len = len(self.rx)
+        for x in range(queue_len - 1):
+            avg_rx += self.rx[x + 1] - self.rx[x]
+            avg_tx += self.tx[x + 1] - self.tx[x]
+        avg_rx = int(avg_rx / queue_len / INTERVAL)
+        avg_tx = int(avg_tx / queue_len / INTERVAL)
+        return avg_rx, avg_tx
 
-        l = len(self.rx)
-        for x in range(l - 1):
-            avgrx += self.rx[x + 1] - self.rx[x]
-            avgtx += self.tx[x + 1] - self.tx[x]
-
-        avgrx = int(avgrx / l / INTERVAL)
-        avgtx = int(avgtx / l / INTERVAL)
-
-        return avgrx, avgtx
-
-
-def liuliang():
-    NET_IN = 0
-    NET_OUT = 0
-    net = psutil.net_io_counters(pernic=True)
-    for k, v in net.items():
-        if 'lo' in k or 'tun' in k:
-            continue
-        else:
-            NET_IN += v[1]
-            NET_OUT += v[0]
-    return NET_IN, NET_OUT
+    def get_traffic(self):
+        queue_len = len(self.rx)
+        return self.rx[queue_len - 1], self.tx[queue_len - 1]
 
 
 def get_network(ip_version):
-    if (ip_version == 4):
-        HOST = "ipv4.google.com"
-    elif (ip_version == 6):
-        HOST = "ipv6.google.com"
+    if ip_version == 4:
+        host = 'ipv4.google.com'
+    elif ip_version == 6:
+        host = 'ipv6.google.com'
     else:
         return False
     try:
-        s = socket.create_connection((HOST, 80), 2).close()
+        socket.create_connection((host, 80), 2).close()
         return True
-    except:
-        pass
-    return False
+    except Exception:
+        return False
 
 
 if __name__ == '__main__':
@@ -141,8 +126,9 @@ if __name__ == '__main__':
                 raise socket.error
 
             print(data)
-            data = s.recv(1024).decode()
-            print(data)
+            if data.find('You are connecting via') < 0:
+                data = s.recv(1024).decode()
+                print(data)
 
             timer = 0
             check_ip = 0
@@ -154,22 +140,20 @@ if __name__ == '__main__':
                 print(data)
                 raise socket.error
 
-            traffic = Traffic()
-            traffic.get()
+            traffic = Network()
             while True:
                 CPU = get_cpu()
-                NetRx, NetTx = traffic.get()
-                NET_IN, NET_OUT = liuliang()
+                NetRx, NetTx = traffic.get_speed()
+                NET_IN, NET_OUT = traffic.get_traffic()
                 Uptime = get_uptime()
                 Load = get_load()
-                MemoryTotal, MemoryUsed = get_memory()
-                SwapTotal, SwapUsed = get_swap()
+                MemoryTotal, MemoryUsed, SwapTotal, SwapUsed = get_memory()
                 HDDTotal, HDDUsed = get_hdd()
 
                 array = {}
                 if not timer:
                     array['online' + str(check_ip)] = get_network(check_ip)
-                    timer = 10
+                    timer = 150
                 else:
                     timer -= 1 * INTERVAL
 

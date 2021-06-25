@@ -185,12 +185,11 @@ Service_Server_Status_client() {
 }
 Installation_dependency() {
   mode=$1
-  [[ -z ${mode} ]] && mode="server"
-  if python --help >/dev/null 2>&1; then
+  if python3 --help >/dev/null 2>&1; then
+    ln -s /usr/bin/python3 /usr/bin/python 
     python_status=1
-  elif python3 --help >/dev/null 2>&1; then
-    ln -s /usr/bin/python3 /usr/bin/python
-    python_status=2
+  elif python --help >/dev/null 2>&1; then
+    python_status=1
   else
     python_status=0
   fi
@@ -200,7 +199,7 @@ Installation_dependency() {
       if [ ${python_status} -eq 0 ]; then
         yum -y install python unzip vim make
         yum -y groupinstall "Development Tools"
-      else
+      elif [ ${python_status} -eq 1 ]; then
         yum -y install unzip vim make
         yum -y groupinstall "Development Tools"
       fi
@@ -208,17 +207,17 @@ Installation_dependency() {
       apt-get update -y
       if [ ${python_status} -eq 0 ]; then
         apt-get -y install python unzip vim build-essential
-      else
+      elif [ ${python_status} -eq 1 ]; then
         apt-get -y install unzip vim build-essential
       fi
     fi
-  else
+  elif [[ ${mode} == "client" ]]; then
     if [ ${release} == "centos" ]; then
       if [ "${python_status}" -eq 0 ]; then
         yum -y update
         yum -y install python
       fi
-    else
+    elif [ ${release} == "debian" ] || [${release} == "ubuntu"]; then
       if [ "${python_status}" -eq 0 ]; then
         apt-get -y update
         apt-get -y install python

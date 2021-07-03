@@ -220,7 +220,7 @@ Installation_dependency() {
         yum -y install python3
         ln -s /usr/bin/python3 /usr/bin/python
       fi
-    elif [ ${release} == "debian" ] || [${release} == "ubuntu"]; then
+    else
       if [ "${python_status}" -eq 0 ]; then
         apt-get -y update
         apt-get -y install python3

@@ -29,14 +29,15 @@ If some of the assets used in this repo infringe your copyright, please contact 
 
 服务端：
 
-```bash
-wget https://cdn.jsdelivr.net/gh/Subeting/ServerStatus-Hotaru/status.sh
+```
+wget https://cdn.jsdelivr.net/gh/Subeting/ServerStatus-Hotaru/status.sh -O status.sh
 bash status.sh s
 ```
 
 客户端：
 
 ```
+wget https://cdn.jsdelivr.net/gh/Subeting/ServerStatus-Hotaru/status.sh -O status.sh
 bash status.sh c
 ```
 

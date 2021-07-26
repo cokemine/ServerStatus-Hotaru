@@ -3,10 +3,10 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
 #=================================================
-#	System Required: CentOS/Debian/Ubuntu
-#	Description: ServerStatus client + server
-#	Version: Test v0.2.0
-#	Author: Toyo,Modified by APTX
+#  System Required: CentOS/Debian/Ubuntu/ArchLinux
+#  Description: ServerStatus client + server
+#  Version: Test v0.2.0
+#  Author: Toyo,Modified by APTX
 #=================================================
 
 sh_ver="0.2.0"
@@ -40,18 +40,18 @@ Tip="${Green_font_prefix}[注意]${Font_color_suffix}"
 check_sys() {
   if [[ -f /etc/redhat-release ]]; then
     release="centos"
-  elif grep -q -E -i "debian" /etc/issue; then
+  elif grep -q -E -i "debian|ubuntu" /etc/issue; then
     release="debian"
-  elif grep -q -E -i "ubuntu" /etc/issue; then
-    release="ubuntu"
   elif grep -q -E -i "centos|red hat|redhat" /etc/issue; then
     release="centos"
-  elif grep -q -E -i "debian" /proc/version; then
+  elif grep -q -E -i "debian|ubuntu" /proc/version; then
     release="debian"
-  elif grep -q -E -i "ubuntu" /proc/version; then
-    release="ubuntu"
   elif grep -q -E -i "centos|red hat|redhat" /proc/version; then
     release="centos"
+  elif grep -q -E -i "Arch|Manjaro" /etc/issue; then
+    release="archlinux"
+  else
+    echo -e 'ServerStatus 暂不支持该Linux发行版'
   fi
   bit=$(uname -m)
 }
@@ -157,12 +157,33 @@ Service_Server_Status_server() {
     chmod +x /etc/init.d/status-server
     chkconfig --add status-server
     chkconfig status-server on
-  else
+  elif [[ ${release} == "debian" ]]; then
     if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_debian" -O /etc/init.d/status-server; then
       echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-server
     update-rc.d -f status-server defaults
+  elif [[ ${release} == "archlinux" ]]; then
+    if [ ! -d "/etc/init.d" ]; then
+      mkdir /etc/init.d
+    fi
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_archlinux" -O /etc/init.d/status-server; then
+      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
+    fi
+    chmod +x /etc/init.d/status-server
+    cat >/usr/lib/systemd/system/status-server.service <<-EOF
+[Unit]
+Description=Statusserver
+Documentation=https://github.com/cokemine/ServerStatus-Hotaru
+After=network.target
+[Service]
+ExecStart=/etc/init.d/status-server start
+ExecStop=/etc/init.d/status-server stop
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl enable status-server.service
   fi
   echo -e "${Info} ServerStatus 服务端服务管理脚本下载完成 !"
 }
@@ -174,19 +195,40 @@ Service_Server_Status_client() {
     chmod +x /etc/init.d/status-client
     chkconfig --add status-client
     chkconfig status-client on
-  else
+  elif [[ ${release} == "debian" ]]; then
     if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_debian" -O /etc/init.d/status-client; then
       echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/status-client
     update-rc.d -f status-client defaults
+  elif [[ ${release} == "archlinux" ]]; then
+    if [ ! -d "/etc/init.d" ]; then
+      mkdir /etc/init.d
+    fi
+    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_archlinux" -O /etc/init.d/status-client; then
+      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
+    fi
+    chmod +x /etc/init.d/status-client
+    cat >/usr/lib/systemd/system/status-client.service <<-EOF
+[Unit]
+Description=StatusClient
+Documentation=https://github.com/cokemine/ServerStatus-Hotaru
+After=network.target
+[Service]
+ExecStart=/etc/init.d/status-client start
+ExecStop=/etc/init.d/status-client stop
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl enable status-client.service
   fi
   echo -e "${Info} ServerStatus 客户端服务管理脚本下载完成 !"
 }
 Installation_dependency() {
   mode=$1
   if python3 --help >/dev/null 2>&1; then
-    ln -s /usr/bin/python3 /usr/bin/python 
+    ln -s /usr/bin/python3 /usr/bin/python
     python_status=1
   elif python --help >/dev/null 2>&1; then
     python_status=1
@@ -204,13 +246,19 @@ Installation_dependency() {
         yum -y install unzip vim make
         yum -y groupinstall "Development Tools"
       fi
-    else
+    elif [[ ${release} == "debian" ]]; then
       apt-get update -y
       if [ ${python_status} -eq 0 ]; then
         apt-get -y install python3 unzip vim build-essential
         ln -s /usr/bin/python3 /usr/bin/python
       elif [ ${python_status} -eq 1 ]; then
         apt-get -y install unzip vim build-essential
+      fi
+    elif [[ ${release} == "archlinux" ]]; then
+      if [ ${python_status} -eq 0 ]; then
+        pacman -Sy python python-pip --noconfirm
+      elif [ ${python_status} -eq 1 ]; then
+        pacman -Sy base-devel --noconfirm
       fi
     fi
   elif [[ ${mode} == "client" ]]; then
@@ -220,11 +268,15 @@ Installation_dependency() {
         yum -y install python3
         ln -s /usr/bin/python3 /usr/bin/python
       fi
-    else
+    elif [[ ${release} == "debian" ]]; then
       if [ "${python_status}" -eq 0 ]; then
         apt-get -y update
         apt-get -y install python3
         ln -s /usr/bin/python3 /usr/bin/python
+      fi
+    elif [[ ${release} == "archlinux" ]]; then
+      if [ ${python_status} -eq 0 ]; then
+        pacman -Sy python python-pip --noconfirm
       fi
     fi
   fi
@@ -691,11 +743,16 @@ Set_ServerStatus_client() {
   Restart_ServerStatus_client
 }
 Install_vnStat() {
-  if [[ ${release} == "centos" ]]; then
+  if [[ ${release} == "archlinux" ]]; then
+    pacman -Sy vnstat --noconfirm
+    systemctl enable vnstat
+    systemctl start vnstat
+    return 0
+  elif [[ ${release} == "centos" ]]; then
     yum -y update
     yum -y install sqlite sqlite-devel
     yum -y groupinstall "Development Tools"
-  else
+  elif [[ ${release} == "debian" ]]; then
     apt-get -y update
     apt-get -y install sqlite3 libsqlite3-dev build-essential
   fi
@@ -750,7 +807,7 @@ Modify_config_client_traffic() {
     sed -i "s/$(grep -w "MonthRotate" /etc/vnstat.conf)/MonthRotate $time_N/" /etc/vnstat.conf
     sed -i "s/$(grep -w "Interface" /etc/vnstat.conf)/Interface \"$netName\"/" /etc/vnstat.conf
     chmod -R 777 /var/lib/vnstat/
-    service vnstat restart
+    systemctl restart vnstat
     if ! grep -q "NET_IN, NET_OUT = get_traffic_vnstat()" ${client_file}/status-client.py; then
       sed -i 's/\t/    /g' ${client_file}/status-client.py
       sed -i 's/NET_IN, NET_OUT = traffic.get_traffic()/NET_IN, NET_OUT = get_traffic_vnstat()/' ${client_file}/status-client.py
@@ -791,6 +848,21 @@ Install_caddy() {
   read -erp "(默认: Y 自动部署):" caddy_yn
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
   if [[ "${caddy_yn}" == [Yy] ]]; then
+    if [[ ${release} == "archlinux" ]]; then
+      pacman -Sy caddy --noconfirm
+      systemctl enable caddy
+      Set_server "server"
+      Set_server_http_port
+      cat >>"/etc/caddy/conf.d/Caddyfile" <<-EOF
+http://${server_s}:${server_http_port_s} {
+  root * ${web_file}
+  encode gzip
+  file_server
+}
+EOF
+      systemctl restart caddy
+      return 0
+    fi
     Set_server "server"
     Set_server_http_port
     if [[ ! -e "/usr/local/caddy/caddy" ]]; then
@@ -890,7 +962,13 @@ Update_ServerStatus_server() {
   Set_Mirror
   check_installed_server_status
   check_pid_server
-  [[ -n ${PID} ]] && /etc/init.d/status-server stop
+  if [[ -n ${PID} ]]; then
+    if [[ ${release} == "archlinux" ]]; then
+      systemctl stop status-server
+    else
+      /etc/init.d/status-server stop
+    fi
+  fi
   Download_Server_Status_server
   rm -rf /etc/init.d/status-server
   Service_Server_Status_server
@@ -900,7 +978,13 @@ Update_ServerStatus_client() {
   Set_Mirror
   check_installed_client_status
   check_pid_client
-  [[ -n ${PID} ]] && /etc/init.d/status-client stop
+  if [[ -n ${PID} ]]; then
+    if [[ ${release} == "archlinux" ]]; then
+      systemctl stop status-client
+    else
+      /etc/init.d/status-client stop
+    fi
+  fi
   if [[ ! -e "${client_file}/status-client.py" ]]; then
     if [[ ! -e "${file}/status-client.py" ]]; then
       echo -e "${Error} ServerStatus 客户端文件不存在 !" && exit 1
@@ -927,19 +1011,37 @@ Start_ServerStatus_server() {
   check_installed_server_status
   check_pid_server
   [[ -n ${PID} ]] && echo -e "${Error} ServerStatus 正在运行，请检查 !" && exit 1
-  /etc/init.d/status-server start
+  if [[ ${release} == "archlinux" ]]; then
+    systemctl start status-server.service
+  else
+    /etc/init.d/status-server start
+  fi
 }
 Stop_ServerStatus_server() {
   check_installed_server_status
   check_pid_server
   [[ -z ${PID} ]] && echo -e "${Error} ServerStatus 没有运行，请检查 !" && exit 1
-  /etc/init.d/status-server stop
+  if [[ ${release} == "archlinux" ]]; then
+    systemctl stop status-server.service
+  else
+    /etc/init.d/status-server stop
+  fi
 }
 Restart_ServerStatus_server() {
   check_installed_server_status
   check_pid_server
-  [[ -n ${PID} ]] && /etc/init.d/status-server stop
-  /etc/init.d/status-server start
+  if [[ -z ${PID} ]]; then
+    if [[ ${release} == "archlinux" ]]; then
+      systemctl stop status-server.service
+    else
+      /etc/init.d/status-server stop
+    fi
+  fi
+  if [[ ${release} == "archlinux" ]]; then
+    systemctl start status-server.service
+  else
+    /etc/init.d/status-server start
+  fi
 }
 Uninstall_ServerStatus_server() {
   check_installed_server_status
@@ -961,16 +1063,26 @@ Uninstall_ServerStatus_server() {
     fi
     rm -rf "/etc/init.d/status-server"
     if [[ -e "/etc/init.d/caddy" ]]; then
-      /etc/init.d/caddy stop
-      wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
-      chmod +x caddy_install.sh
-      bash caddy_install.sh uninstall
-      rm -rf caddy_install.sh
+      if [[ ${release} == "archlinux" ]]; then
+        systemctl stop caddy
+        systemctl disable caddy
+        pacman -R caddy --noconfirm
+      else
+        /etc/init.d/caddy stop
+        wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
+        chmod +x caddy_install.sh
+        bash caddy_install.sh uninstall
+        rm -rf caddy_install.sh
+      fi
     fi
     if [[ ${release} == "centos" ]]; then
       chkconfig --del status-server
-    else
+    elif [[ ${release} == "debian" ]]; then
       update-rc.d -f status-server remove
+    elif [[ ${release} == "archlinux" ]]; then
+      systemctl stop status-server
+      systemctl disable status-server
+      rm /usr/lib/systemd/system/status-server.service
     fi
     echo && echo "ServerStatus 卸载完成 !" && echo
   else
@@ -981,19 +1093,32 @@ Start_ServerStatus_client() {
   check_installed_client_status
   check_pid_client
   [[ -n ${PID} ]] && echo -e "${Error} ServerStatus 正在运行，请检查 !" && exit 1
-  /etc/init.d/status-client start
+  if [[ ${release} == "archlinux" ]]; then
+    systemctl start status-client.service
+  else
+    /etc/init.d/status-client start
+  fi
 }
 Stop_ServerStatus_client() {
   check_installed_client_status
   check_pid_client
   [[ -z ${PID} ]] && echo -e "${Error} ServerStatus 没有运行，请检查 !" && exit 1
-  /etc/init.d/status-client stop
+  if [[ ${release} == "archlinux" ]]; then
+    systemctl stop status-client.service
+  else
+    /etc/init.d/status-server client
+  fi
 }
 Restart_ServerStatus_client() {
   check_installed_client_status
   check_pid_client
-  [[ -n ${PID} ]] && /etc/init.d/status-client stop
-  /etc/init.d/status-client start
+  if [[ -n ${PID} ]]; then
+    if [[ ${release} == "archlinux" ]]; then
+      systemctl restart status-client.service
+    else
+      /etc/init.d/status-server restart
+    fi
+  fi
 }
 Uninstall_ServerStatus_client() {
   check_installed_client_status
@@ -1015,8 +1140,12 @@ Uninstall_ServerStatus_client() {
     rm -rf /etc/init.d/status-client
     if [[ ${release} == "centos" ]]; then
       chkconfig --del status-client
-    else
+    elif [[ ${release} == "debian" ]]; then
       update-rc.d -f status-client remove
+    elif [[ ${release} == "archlinux" ]]; then
+      systemctl stop status-client
+      systemctl disable status-client
+      rm /usr/lib/systemd/system/status-client.service
     fi
     echo && echo "ServerStatus 卸载完成 !" && echo
   else
@@ -1249,12 +1378,12 @@ menu_server() {
   esac
 }
 Set_Mirror() {
-    echo -e "${Info} 请输入要选择的下载源，默认使用GitHub，中国大陆建议选择Coding.net，但是不建议将服务端部署在中国大陆主机上
+  echo -e "${Info} 请输入要选择的下载源，默认使用GitHub，中国大陆建议选择Coding.net，但是不建议将服务端部署在中国大陆主机上
   ${Green_font_prefix} 1.${Font_color_suffix} GitHub
   ${Green_font_prefix} 2.${Font_color_suffix} Coding.net (服务端安装并非全部使用Coding.net仓库)"
-    read -erp "请输入数字 [1-2], 默认为 1:" mirror_num
-    [[ -z "${mirror_num}" ]] && mirror_num=1
-    [[ ${mirror_num} == 2 ]] && link_prefix=${coding_prefix} || link_prefix=${github_prefix}
+  read -erp "请输入数字 [1-2], 默认为 1:" mirror_num
+  [[ -z "${mirror_num}" ]] && mirror_num=1
+  [[ ${mirror_num} == 2 ]] && link_prefix=${coding_prefix} || link_prefix=${github_prefix}
 }
 check_sys
 action=$1

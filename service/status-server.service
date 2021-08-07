@@ -1,0 +1,11 @@
+[Unit]
+Description=ServerStatus-Server
+Documentation=https://github.com/cokemine/ServerStatus-Hotaru
+After=network.target
+[Service]
+EnvironmentFile=/usr/local/ServerStatus/server/config.conf
+ExecStart=/usr/local/ServerStatus/server/sergate --config=/usr/local/ServerStatus/server/config.json --web-dir=/usr/local/ServerStatus/web --port $PORT
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target

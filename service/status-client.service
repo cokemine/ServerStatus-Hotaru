@@ -1,0 +1,10 @@
+[Unit]
+Description=ServerStatus-Client
+Documentation=https://github.com/cokemine/ServerStatus-Hotaru
+After=network.target
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/ServerStatus/client/status-client.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target

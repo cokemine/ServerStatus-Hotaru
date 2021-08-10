@@ -27,7 +27,7 @@ server_log_file="/tmp/serverstatus_server.log"
 jq_file="${file}/jq"
 region_json="${file}/region.json"
 
-github_prefix="https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master"
+github_prefix="https://raw.fastgit.org/CokeMine/ServerStatus-Hotaru/master"
 coding_prefix="https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/raw/master"
 link_prefix=${github_prefix}
 
@@ -100,7 +100,7 @@ Download_Server_Status_server() {
   if [[ ! -e "${server_file}" ]]; then
     mkdir "${server_file}"
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-    wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+    wget -N --no-check-certificate https://hub.fastgit.org/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
     unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
   else
     if [[ -e "${server_file}/sergate" ]]; then
@@ -108,7 +108,7 @@ Download_Server_Status_server() {
       mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
     else
       mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-      wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+      wget -N --no-check-certificate https://hub.fastgit.org/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
       unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
     fi
   fi
@@ -827,9 +827,9 @@ Modify_config_client() {
 Install_jq() {
   if [[ ! -e ${jq_file} ]]; then
     if [[ ${bit} == "x86_64" ]]; then
-      wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
+      wget --no-check-certificate "https://hub.fastgit.org/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
     else
-      wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
+      wget --no-check-certificate "https://hub.fastgit.org/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
     fi
     [[ ! -e ${jq_file} ]] && echo -e "${Error} JQ解析器 下载失败，请检查 !" && exit 1
     chmod +x ${jq_file}
@@ -838,7 +838,7 @@ Install_jq() {
     echo -e "${Info} JQ解析器 已安装，继续..."
   fi
   if [[ ! -e ${region_json} ]]; then
-    wget --no-check-certificate "https://raw.githubusercontent.com/michaelwittig/node-i18n-iso-countries/master/langs/zh.json" -O ${region_json}
+    wget --no-check-certificate "https://raw.fastgit.org/michaelwittig/node-i18n-iso-countries/master/langs/zh.json" -O ${region_json}
     [[ ! -e ${region_json} ]] && echo -e "${Error} ISO 3166-1 json文件下载失败，请检查！" && exit 1
   fi
 }

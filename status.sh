@@ -70,6 +70,7 @@ check_pid_client() {
   PID=$(pgrep -f "status-client.py")
 }
 check_region() {
+  [[ ! -e "${region_json}" ]] && return 0
   if ${jq_file} "[.countries | has(\"${region_s}}\")]" "${region_json}" | grep -q 'true' >/dev/null 2>&1; then
     return 0
   elif grep -qw "${region_s}" "${region_json}"; then
@@ -92,30 +93,22 @@ Download_Server_Status_server() {
   make
   [[ ! -e "sergate" ]] && echo -e "${Error} ServerStatus 服务端编译失败 !" && cd "${file_1}" && rm -rf "/tmp/ServerStatus-Hotaru-master" && exit 1
   cd "${file_1}" || exit 1
-  [[ ! -e "${file}" ]] && mkdir "${file}"
-  if [[ ! -e "${server_file}" ]]; then
-    mkdir "${server_file}"
+  mkdir -p "${server_file}"
+  if [[ -e "${server_file}/sergate" ]]; then
+    mv "${server_file}/sergate" "${server_file}/sergate1"
+    mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
+  else
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
     wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
     unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
-  else
-    if [[ -e "${server_file}/sergate" ]]; then
-      mv "${server_file}/sergate" "${server_file}/sergate1"
-      mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-    else
-      mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-      wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
-      unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
-    fi
   fi
+  rm -rf "/tmp/ServerStatus-Hotaru-master"
   if [[ ! -e "${server_file}/sergate" ]]; then
     echo -e "${Error} ServerStatus 服务端移动重命名失败 !"
     [[ -e "${server_file}/sergate1" ]] && mv "${server_file}/sergate1" "${server_file}/sergate"
-    rm -rf "/tmp/ServerStatus-Hotaru-master"
     exit 1
   else
     [[ -e "${server_file}/sergate1" ]] && rm -rf "${server_file}/sergate1"
-    rm -rf "/tmp/ServerStatus-Hotaru-master"
   fi
 }
 Download_Server_Status_client() {

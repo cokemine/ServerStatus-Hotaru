@@ -59,11 +59,7 @@ check_installed_server_status() {
   [[ ! -e "${server_file}/sergate" ]] && echo -e "${Error} ServerStatus 服务端没有安装，请检查 !" && exit 1
 }
 check_installed_client_status() {
-  if [[ ! -e "${client_file}/status-client.py" ]]; then
-    if [[ ! -e "${file}/status-client.py" ]]; then
-      echo -e "${Error} ServerStatus 客户端没有安装，请检查 !" && exit 1
-    fi
-  fi
+  [[ ! -e "${client_file}/status-client.py" ]] && echo -e "${Error} ServerStatus 客户端没有安装，请检查 !" && exit 1
 }
 check_pid_server() {
   #PID=$(ps -ef | grep "sergate" | grep -v grep | grep -v ".sh" | grep -v "init.d" | grep -v "service" | awk '{print $2}')

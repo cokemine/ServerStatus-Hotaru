@@ -9,7 +9,7 @@ export PATH
 #  Author: Toyo,Modified by APTX
 #=================================================
 
-sh_ver="0.2.0"
+sh_ver="0.3.1"
 filepath=$(
   cd "$(dirname "$0")" || exit
   pwd
@@ -1106,7 +1106,7 @@ Stop_ServerStatus_client() {
   if [[ ${release} == "archlinux" ]]; then
     systemctl stop status-client.service
   else
-    /etc/init.d/status-server client
+    /etc/init.d/status-client stop
   fi
 }
 Restart_ServerStatus_client() {
@@ -1116,7 +1116,7 @@ Restart_ServerStatus_client() {
     if [[ ${release} == "archlinux" ]]; then
       systemctl restart status-client.service
     else
-      /etc/init.d/status-server restart
+      /etc/init.d/status-client restart
     fi
   fi
 }

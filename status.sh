@@ -116,18 +116,9 @@ Download_Server_Status_client() {
   wget -N --no-check-certificate "${link_prefix}/clients/status-client.py"
   [[ ! -e "status-client.py" ]] && echo -e "${Error} ServerStatus 客户端下载失败 !" && exit 1
   cd "${file_1}" || exit 1
-  [[ ! -e "${file}" ]] && mkdir "${file}"
-  if [[ ! -e "${client_file}" ]]; then
-    mkdir "${client_file}"
-    mv "/tmp/status-client.py" "${client_file}/status-client.py"
-  else
-    if [[ -e "${client_file}/status-client.py" ]]; then
-      mv "${client_file}/status-client.py" "${client_file}/status-client1.py"
-      mv "/tmp/status-client.py" "${client_file}/status-client.py"
-    else
-      mv "/tmp/status-client.py" "${client_file}/status-client.py"
-    fi
-  fi
+  mkdir -p "${client_file}"
+  [[ -e "${client_file}/status-client.py" ]] && mv "${client_file}/status-client.py" "${client_file}/status-client1.py"
+  mv "/tmp/status-client.py" "${client_file}/status-client.py"
   if [[ ! -e "${client_file}/status-client.py" ]]; then
     echo -e "${Error} ServerStatus 客户端移动失败 !"
     [[ -e "${client_file}/status-client1.py" ]] && mv "${client_file}/status-client1.py" "${client_file}/status-client.py"

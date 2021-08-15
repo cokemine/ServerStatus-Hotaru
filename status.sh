@@ -51,7 +51,7 @@ check_sys() {
   elif grep -q -E -i "Arch|Manjaro" /etc/issue; then
     release="archlinux"
   else
-    echo -e 'ServerStatus 暂不支持该Linux发行版'
+    echo -e "ServerStatus 暂不支持该Linux发行版"
   fi
   bit=$(uname -m)
 }
@@ -1205,7 +1205,7 @@ Set_iptables() {
     chkconfig --level 2345 iptables on
   else
     iptables-save >/etc/iptables.up.rules
-    echo -e '#!/bin/bash\n/sbin/iptables-restore < /etc/iptables.up.rules' >/etc/network/if-pre-up.d/iptables
+    echo -e "#!/bin/bash\n/sbin/iptables-restore < /etc/iptables.up.rules" >/etc/network/if-pre-up.d/iptables
     chmod +x /etc/network/if-pre-up.d/iptables
   fi
 }

@@ -129,136 +129,53 @@ Download_Server_Status_client() {
     rm -rf "/tmp/status-client.py"
   fi
 }
-Service_Server_Status_server() {
-  if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_centos" -O /etc/init.d/status-server; then
-      echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-server
-    chkconfig --add status-server
-    chkconfig status-server on
-  elif [[ ${release} == "debian" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_debian" -O /etc/init.d/status-server; then
-      echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-server
-    update-rc.d -f status-server defaults
-  elif [[ ${release} == "archlinux" ]]; then
-    if [ ! -d "/etc/init.d" ]; then
-      mkdir /etc/init.d
-    fi
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_archlinux" -O /etc/init.d/status-server; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-server
-    cat >/usr/lib/systemd/system/status-server.service <<-EOF
-[Unit]
-Description=Statusserver
-Documentation=https://github.com/cokemine/ServerStatus-Hotaru
-After=network.target
-[Service]
-ExecStart=/etc/init.d/status-server start
-ExecStop=/etc/init.d/status-server stop
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-    systemctl enable status-server.service
+Download_Server_Status_Service() {
+  mode=$1
+  [[ -z ${mode} ]] && mode="server"
+  local service_note="服务端"
+  [[ ${mode} == "client" ]] && service_note="客户端"
+  if [[ ${release} == "archlinux" ]]; then
+    wget --no-check-certificate "${link_prefix}/service/status-${mode}.service" -O "/usr/lib/systemd/system/status-${mode}.service" ||
+      {
+        echo -e "${Error} ServerStatus ${service_note}服务管理脚本下载失败 !"
+        exit 1
+      }
+    systemctl enable "status-${mode}.service"
+  else
+    wget --no-check-certificate "${link_prefix}/service/server_status_${mode}_${release}" -O "/etc/init.d/status-${mode}" ||
+      {
+        echo -e "${Error} ServerStatus ${service_note}服务管理脚本下载失败 !"
+        exit 1
+      }
+    chmod +x "/etc/init.d/status-${mode}"
+    [[ ${release} == "centos" ]] &&
+      {
+        chkconfig --add "status-${mode}"
+        chkconfig "status-${mode}" on
+      }
+
+    [[ ${release} == "debian" ]] && update-rc.d -f "status-${mode}" defaults
   fi
-  echo -e "${Info} ServerStatus 服务端服务管理脚本下载完成 !"
+  echo -e "${Info} ServerStatus ${service_note}服务管理脚本下载完成 !"
+}
+Service_Server_Status_server() {
+  Download_Server_Status_Service "server"
 }
 Service_Server_Status_client() {
-  if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_centos" -O /etc/init.d/status-client; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-client
-    chkconfig --add status-client
-    chkconfig status-client on
-  elif [[ ${release} == "debian" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_debian" -O /etc/init.d/status-client; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-client
-    update-rc.d -f status-client defaults
-  elif [[ ${release} == "archlinux" ]]; then
-    if [ ! -d "/etc/init.d" ]; then
-      mkdir /etc/init.d
-    fi
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_archlinux" -O /etc/init.d/status-client; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-client
-    cat >/usr/lib/systemd/system/status-client.service <<-EOF
-[Unit]
-Description=StatusClient
-Documentation=https://github.com/cokemine/ServerStatus-Hotaru
-After=network.target
-[Service]
-ExecStart=/etc/init.d/status-client start
-ExecStop=/etc/init.d/status-client stop
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-    systemctl enable status-client.service
-  fi
-  echo -e "${Info} ServerStatus 客户端服务管理脚本下载完成 !"
+  Download_Server_Status_Service "client"
 }
 Installation_dependency() {
   mode=$1
-  if python3 --help >/dev/null 2>&1; then
-    ln -s /usr/bin/python3 /usr/bin/python
-    python_status=1
-  elif python --help >/dev/null 2>&1; then
-    python_status=1
-  else
-    python_status=0
-  fi
-  if [[ ${mode} == "server" ]]; then
-    if [[ ${release} == "centos" ]]; then
-      yum -y update
-      if [ ${python_status} -eq 0 ]; then
-        yum -y install python3 unzip vim make
-        ln -s /usr/bin/python3 /usr/bin/python
-        yum -y groupinstall "Development Tools"
-      elif [ ${python_status} -eq 1 ]; then
-        yum -y install unzip vim make
-        yum -y groupinstall "Development Tools"
-      fi
-    elif [[ ${release} == "debian" ]]; then
-      apt-get update -y
-      if [ ${python_status} -eq 0 ]; then
-        apt-get -y install python3 unzip vim build-essential
-        ln -s /usr/bin/python3 /usr/bin/python
-      elif [ ${python_status} -eq 1 ]; then
-        apt-get -y install unzip vim build-essential
-      fi
-    elif [[ ${release} == "archlinux" ]]; then
-      if [ ${python_status} -eq 0 ]; then
-        pacman -Sy python python-pip --noconfirm
-      elif [ ${python_status} -eq 1 ]; then
-        pacman -Sy base-devel --noconfirm
-      fi
-    fi
-  elif [[ ${mode} == "client" ]]; then
-    if [ ${release} == "centos" ]; then
-      if [ "${python_status}" -eq 0 ]; then
-        yum -y update
-        yum -y install python3
-        ln -s /usr/bin/python3 /usr/bin/python
-      fi
-    elif [[ ${release} == "debian" ]]; then
-      if [ "${python_status}" -eq 0 ]; then
-        apt-get -y update
-        apt-get -y install python3
-        ln -s /usr/bin/python3 /usr/bin/python
-      fi
-    elif [[ ${release} == "archlinux" ]]; then
-      if [ ${python_status} -eq 0 ]; then
-        pacman -Sy python python-pip --noconfirm
-      fi
-    fi
+  if [[ ${release} == "centos" ]]; then
+    yum -y update
+    yum -y install python3 unzip
+    [[ ${mode} == "server" ]] && yum -y groupinstall "Development Tools"
+  elif [[ ${release} == "debian" ]]; then
+    apt-get -y install python3 unzip
+    [[ ${mode} == "server" ]] && apt-get -y install build-essential
+  elif [[ ${release} == "archlinux" ]]; then
+    pacman -Sy python python-pip unzip--noconfirm
+    [[ ${mode} == "server" ]] && pacman -Sy base-devel --noconfirm
   fi
 }
 Write_server_config() {
@@ -285,16 +202,7 @@ PORT = ${server_port_s}
 EOF
 }
 Read_config_client() {
-  if [[ ! -e "${client_file}/status-client.py" ]]; then
-    if [[ ! -e "${file}/status-client.py" ]]; then
-      echo -e "${Error} ServerStatus 客户端文件不存在 !" && exit 1
-    else
-      client_text="$(sed 's/\"//g;s/,//g;s/ //g' "${file}/status-client.py")"
-      rm -rf "${file}/status-client.py"
-    fi
-  else
-    client_text="$(sed 's/\"//g;s/,//g;s/ //g' "${client_file}/status-client.py") "
-  fi
+  client_text="$(sed 's/\"//g;s/,//g;s/ //g' "${client_file}/status-client.py") "
   client_server="$(echo -e "${client_text}" | grep "SERVER=" | awk -F "=" '{print $2}')"
   client_port="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   client_user="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"

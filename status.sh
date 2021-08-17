@@ -748,51 +748,35 @@ Install_caddy() {
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
   if [[ "${caddy_yn}" == [Yy] ]]; then
     if [[ ${release} == "archlinux" ]]; then
-      pacman -Sy caddy --noconfirm
-      systemctl enable caddy
-      Set_server "server"
-      Set_server_http_port
-      cat >>"/etc/caddy/conf.d/Caddyfile" <<-EOF
+      [[ ! -e /usr/bin/caddy ]] && {
+        pacman -Sy caddy --noconfirm
+        systemctl enable caddy
+      }
+      local caddy_file="/etc/caddy/conf.d/Caddyfile"
+    else
+      [[ ! -e "/usr/local/caddy/caddy" ]] && {
+        wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
+        bash caddy_install.sh install
+        rm -rf caddy_install.sh
+      }
+      local caddy_file="/usr/local/caddy/Caddyfile"
+    fi
+    Set_server "server"
+    Set_server_http_port
+    cat >>${caddy_file} <<-EOF
 http://${server_s}:${server_http_port_s} {
   root * ${web_file}
   encode gzip
   file_server
 }
 EOF
+    [[ ! -e "/usr/local/caddy/caddy" ]] || [[ ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
+    if [[ ${release} == "archlinux" ]]; then
       systemctl restart caddy
-      return 0
-    fi
-    Set_server "server"
-    Set_server_http_port
-    if [[ ! -e "/usr/local/caddy/caddy" ]]; then
-      wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
-      chmod +x caddy_install.sh
-      bash caddy_install.sh install
-      rm -rf caddy_install.sh
-      [[ ! -e "/usr/local/caddy/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
     else
-      echo -e "${Info} 发现Caddy已安装，开始配置..."
-    fi
-    if [[ ! -s "/usr/local/caddy/Caddyfile" ]]; then
-      cat >"/usr/local/caddy/Caddyfile" <<-EOF
-http://${server_s}:${server_http_port_s} {
- root * ${web_file}
- encode gzip
- file_server
-}
-EOF
-      /etc/init.d/caddy restart
-    else
-      echo -e "${Info} 发现 Caddy 配置文件非空，开始追加 ServerStatus 网站配置内容到文件最后..."
-      cat >>"/usr/local/caddy/Caddyfile" <<-EOF
-http://${server_s}:${server_http_port_s} {
- root * ${web_file}
- encode gzip
- file_server
-}
-EOF
       /etc/init.d/caddy restart
     fi
+    echo -e "${Info} 发现 Caddy 配置文件非空，开始追加 ServerStatus 网站配置内容到文件最后..."
   else
     echo -e "${Info} 跳过 HTTP服务部署，请手动部署，Web网页文件位置：${web_file} ，如果位置改变，请注意修改服务脚本文件 /etc/init.d/status-server 中的 WEB_BIN 变量 !"
   fi

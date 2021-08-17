@@ -25,6 +25,7 @@ client_file="/usr/local/ServerStatus/client"
 client_log_file="/tmp/serverstatus_client.log"
 server_log_file="/tmp/serverstatus_server.log"
 jq_file="${file}/jq"
+[[ ! -e ${jq_file} ]] && jq_file="/usr/bin/jq"
 region_json="${file}/region.json"
 
 github_prefix="https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master"
@@ -172,6 +173,7 @@ Installation_dependency() {
     yum -y install python3 >/dev/null 2>&1 || yum -y install python
     [[ ${mode} == "server" ]] && yum -y groupinstall "Development Tools"
   elif [[ ${release} == "debian" ]]; then
+    apt-get -y update
     apt-get -y install unzip
     apt-get -y install python3 >/dev/null 2>&1 || apt-get -y install python
     [[ ${mode} == "server" ]] && apt-get -y install build-essential
@@ -659,18 +661,18 @@ Install_vnStat() {
   vnstatd -d
   if [[ ${release} == "centos" ]]; then
     if grep "6\..*" /etc/redhat-release | grep -i "centos" | grep -v "{^6}\.6" >/dev/null; then
-      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/redhat/vnstat /etc/init.d/
+      [[ ! -e /etc/init.d/vnstat ]] && cp examples/init.d/redhat/vnstat /etc/init.d/
       chkconfig vnstat on
       service vnstat restart
     fi
   else
     if grep -i "debian" /etc/issue | grep -q "7" || grep -i "ubuntu" /etc/issue | grep -q "14"; then
-      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/debian/vnstat /etc/init.d/
+      [[ ! -e /etc/init.d/vnstat ]] && cp examples/init.d/debian/vnstat /etc/init.d/
       update-rc.d vnstat defaults
       service vnstat restart
     fi
   fi
-  if [ ! -e /etc/init.d/vnstat ]; then
+  if [[ ! -e /etc/init.d/vnstat ]]; then
     cp -v examples/systemd/simple/vnstat.service /etc/systemd/system/
     systemctl enable vnstat
     systemctl start vnstat
@@ -716,11 +718,17 @@ Modify_config_client() {
   Modify_config_client_traffic
 }
 Install_jq() {
+  jq_file="${file}/jq"
   if [[ ! -e ${jq_file} ]]; then
     if [[ ${bit} == "x86_64" ]]; then
       wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
-    else
+    elif [[ ${bit} == "i386" ]]; then
       wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
+    else
+      [[ ${release} == "archlinux" ]] && pacman -Sy jq --noconfirm
+      [[ ${release} == "centos" ]] && yum -y install jq
+      [[ ${release} == "debian" ]] && apt-get -y install jq
+      jq_file="/usr/bin/jq"
     fi
     [[ ! -e ${jq_file} ]] && echo -e "${Error} JQ解析器 下载失败，请检查 !" && exit 1
     chmod +x ${jq_file}

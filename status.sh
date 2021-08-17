@@ -168,15 +168,18 @@ Installation_dependency() {
   mode=$1
   if [[ ${release} == "centos" ]]; then
     yum -y update
-    yum -y install python3 unzip
+    yum -y install unzip
+    yum -y install python3 >/dev/null 2>&1 || yum -y install python
     [[ ${mode} == "server" ]] && yum -y groupinstall "Development Tools"
   elif [[ ${release} == "debian" ]]; then
-    apt-get -y install python3 unzip
+    apt-get -y install unzip
+    apt-get -y install python3 >/dev/null 2>&1 || apt-get -y install python
     [[ ${mode} == "server" ]] && apt-get -y install build-essential
   elif [[ ${release} == "archlinux" ]]; then
-    pacman -Sy python python-pip unzip--noconfirm
+    pacman -Sy python python-pip unzip --noconfirm
     [[ ${mode} == "server" ]] && pacman -Sy base-devel --noconfirm
   fi
+  [[ ! -e /usr/bin/python ]] && ln -s /usr/bin/python3 /usr/bin/python
 }
 Write_server_config() {
   cat >${server_conf} <<-EOF
@@ -1105,12 +1108,14 @@ Update_Shell() {
   Set_Mirror
   sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "${link_prefix}/status.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1)
   [[ -z ${sh_new_ver} ]] && echo -e "${Error} 无法链接到 Github !" && exit 0
-  if [[ -e "/etc/init.d/status-client" ]]; then
+  if [[ -e "/etc/init.d/status-client" ]] || [[ -e "/usr/lib/systemd/system/status-client.service" ]]; then
     rm -rf /etc/init.d/status-client
+    rm -rf /usr/lib/systemd/system/status-client.service
     Service_Server_Status_client
   fi
-  if [[ -e "/etc/init.d/status-server" ]]; then
+  if [[ -e "/etc/init.d/status-server" ]] || [[ -e "/usr/lib/systemd/system/status-server.service" ]]; then
     rm -rf /etc/init.d/status-server
+    rm -rf /usr/lib/systemd/system/status-server.service
     Service_Server_Status_server
   fi
   wget -N --no-check-certificate "${link_prefix}/status.sh" && chmod +x status.sh

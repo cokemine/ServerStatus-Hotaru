@@ -77,6 +77,8 @@ def get_cpu():
 
 def get_traffic_vnstat():
     vnstat = os.popen('vnstat --oneline b').readline()
+    if "Not enough data available yet" in vnstat:
+        return 0, 0
     v_data = vnstat.split(';')
     net_in = int(v_data[8])
     net_out = int(v_data[9])

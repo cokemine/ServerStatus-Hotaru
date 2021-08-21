@@ -39,8 +39,9 @@ def get_memory():
 
     mem_total = float(result['MemTotal'])
     mem_free = float(result['MemFree'])
+    buffers = float(result['Buffers'])
     cached = float(result['Cached'])
-    mem_used = mem_total - (cached + mem_free)
+    mem_used = mem_total - (mem_free + buffers + cached)
     swap_total = float(result['SwapTotal'])
     swap_free = float(result['SwapFree'])
     return int(mem_total), int(mem_used), int(swap_total), int(swap_free)

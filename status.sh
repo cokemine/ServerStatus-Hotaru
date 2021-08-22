@@ -913,7 +913,7 @@ Stop_ServerStatus_server() {
 Restart_ServerStatus_server() {
   check_installed_server_status
   check_pid_server
-  if [[ -z ${PID} ]]; then
+  if [[ -n ${PID} ]]; then
     if [[ ${release} == "archlinux" ]]; then
       systemctl stop status-server.service
     else

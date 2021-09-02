@@ -45,12 +45,12 @@ check_sys() {
     release="debian"
   elif grep -q -E -i "centos|red hat|redhat" /etc/issue; then
     release="centos"
+  elif grep -q -E -i "Arch|Manjaro" /etc/issue; then
+    release="archlinux"
   elif grep -q -E -i "debian|ubuntu" /proc/version; then
     release="debian"
   elif grep -q -E -i "centos|red hat|redhat" /proc/version; then
     release="centos"
-  elif grep -q -E -i "Arch|Manjaro" /etc/issue; then
-    release="archlinux"
   else
     echo -e "ServerStatus 暂不支持该Linux发行版"
   fi

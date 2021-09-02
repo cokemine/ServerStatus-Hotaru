@@ -71,6 +71,7 @@ check_pid_client() {
   PID=$(pgrep -f "status-client.py")
 }
 check_region() {
+  # 如果找不到 region 文件, 默认不检测
   [[ ! -e "${region_json}" ]] && return 0
   if ${jq_file} "[.countries | has(\"${region_s}}\")]" "${region_json}" | grep -q 'true' >/dev/null 2>&1; then
     return 0
@@ -766,7 +767,7 @@ http://${server_s}:${server_http_port_s} {
   file_server
 }
 EOF
-    [[ ! -e "/usr/local/caddy/caddy" ]] || [[ ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
+    [[ ! -e "/usr/local/caddy/caddy" && ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
     if [[ ${release} == "archlinux" ]]; then
       systemctl restart caddy
     else

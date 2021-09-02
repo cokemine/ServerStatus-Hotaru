@@ -715,11 +715,12 @@ Modify_config_client() {
   Modify_config_client_traffic
 }
 Install_jq() {
-  jq_file="${file}/jq"
   if [[ ! -e ${jq_file} ]]; then
     if [[ ${bit} == "x86_64" ]]; then
+      jq_file="${file}/jq"
       wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
     elif [[ ${bit} == "i386" ]]; then
+      jq_file="${file}/jq"
       wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
     else
       [[ ${release} == "archlinux" ]] && pacman -Sy jq --noconfirm

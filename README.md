@@ -1,31 +1,45 @@
 # ServerStatus-Hotaru
 云探针、多服务器探针、云监控、多服务器云监控
 
-基于ServerStatus-Toyo最新版本稍作修改，不太会脚本什么的，前端也垃圾。见谅。
-
-默认图片素材来源: Pixiv:  86597206 默认背景来源：nisekoi.jp
-
-如需用做商业用途请更换主题图片。
-
-For commercial use, please replace the images.
-
-若本仓库用到的一些素材侵犯了您的版权，请联系我处理，谢谢。
-
-If some of the assets used in this repo infringe your copyright, please contact me, thanks.
+基于 ServerStatus-Toyo 最新版本稍作修改。
 
 ## 特性
 
-前端基于Vue 3.0和SemanticUI制作，如需修改前端建议自行修改打包：
+服务端客户端脚本支持系统：Centos 7、Debian 7、Ubuntu 14.04 及以上、ArchLinux
 
-前端开源地址：https://github.com/CokeMine/Hotaru_theme
+客户端支持 Python 版本：Python 2.7 - Python 3
 
-客户端支持Python版本：Python2.7 - Python3.7
+Golang客户端：如果您的客户端环境无法使用 Python， 可以使用 Golang 编写的客户端
 
-客户端可以选择使用vnStat按月计算流量，会自动编译安装最新版本vnStat。如不使用vnStat，则默认计算流量方式为重启后流量清零。
+开源地址：https://github.com/cokemine/ServerStatus-goclient
+
+流量计算：客户端可以选择使用 vnStat 按月计算流量，会自动编译安装最新版本vnStat（ArchLinux 会从软件源安装最新版本）。如不使用 vnStat ，则默认计算流量方式为重启后流量清零。请注意 ServerStatus 不会与协议为 GPLv2 的 vnStat 强耦合。
+
+前端基于 Vue 3.0 和 SemanticUI 制作，如需修改前端建议自行修改打包。
+
+前端所使用一些静态资源见前端仓库下的声明。
+
+前端开源地址：https://github.com/cokemine/hotaru_theme
+
+## 其他说明
+
+ServerStatus-Hotaru 将会停留在轻量级的 ServerStatus，不会再添加新的功能
+
+如果你有以下需求：
+
+1、Websocket
+
+2、Docker
+
+3、客户端掉线 Telegram Bot 通知
+
+4、使用 Web 管理、添加、修改客户端信息
+
+欢迎使用 NodeStatus: https://github.com/cokemine/nodestatus （请到 beta 版再实际使用）
+
+ServerStatus-Hotaru 仍会继续维护
 
 ## 安装方法
-
-请见：https://www.cokemine.com/serverstatus-hotaru.html
 
 服务端：
 
@@ -41,26 +55,7 @@ bash status.sh s
 bash status.sh c
 ```
 
-## 修改方法
-
-如果你使用Toyo版本或原版本，请备份你的config文件并重新编译安装本版本服务端
-
-配置文件：/usr/local/ServerStatus/server/config.json备份并自行添加Region
-
-```json
-{
-   "username": "Name",
-   "password": "Password",
-   "name": "Your Servername",
-   "type": "KVM",
-   "host": "None",
-   "location": "洛杉矶",
-   "disabled": false,
-   "region": "US"
-},
-```
-
-替换配置文件，重启ServerStatus
+具体可见：https://www.cokemine.com/serverstatus-hotaru.html
 
 ## 手动安装服务端
 
@@ -82,21 +77,45 @@ mv ./hotaru-theme /usr/local/ServerStatus/web #此为站点根目录，请自行
 nohup ./sergate --config=config.json --web-dir=/usr/local/ServerStatus/web --port=35601 > /tmp/serverstatus_server.log 2>&1 & #默认端口35601
 ```
 
+## 手动安装客户端
+
+使用 Psutil 版客户端即可使 ServerStatus 客户端在 Windows 等其他平台运行
+
+```powershell
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py # 若未安装pip
+python get-pip.py
+python pip install psutil
+# 修改 status-psutil.py
+python status-psutil.py
+```
+
+Linux 版客户端支持绝大部分 Linux 发行版系统，一般不需要使用 psutil 版客户端。
+
+```bash
+apt install python3 python3-pip wget
+pip3 install psutil
+wget https://raw.githubusercontent.com/cokemine/ServerStatus-Hotaru/master/clients/status-psutil.py
+vim status-psutil.py #修改客户端配置文件
+python3 status-psutil.py
+# https://raw.githubusercontent.com/cokemine/ServerStatus-Hotaru/master/clients/status-client.py 默认版本无需 psutil 依赖
+```
+
 ## 更新前端
 
 默认服务端更新不会更新前端。因为更新前端会导致自己自定义的前端消失。
 
 ```bash
 rm -rf /usr/local/ServerStatus/web/*
-wget "https://github.com/cokemine/Hotaru_theme/releases/download/latest/hotaru-theme.zip"
+wget "https://github.com/cokemine/hotaru_theme/releases/download/latest/hotaru-theme.zip"
 unzip hotaru-theme.zip
 mv ./hotaru-theme/* /usr/local/ServerStatus/web/
 service status-server restart
+# systemctl restart status-server
 ```
 
-## 前端旗帜图标
+## 关于前端旗帜图标
 
-目前通过脚本使用旗帜图标仅支援当前国家/地区在ISO 3166-1标准里，否则可能会出现无法添加的情况，如欧盟 `EU`，但是前端是具备该旗帜的。你可能需要手动加入。方法是修改`/usr/local/ServerStatus/server/config.json`，将你想修改的服务器的`region`改成你需要的。
+目前通过脚本使用旗帜图标仅支援当前国家/地区在 ISO 3166-1 标准里，否则可能会出现无法添加的情况，如欧盟 `EU`，但是前端是具备该旗帜的。你可能需要手动加入。方法是修改`/usr/local/ServerStatus/server/config.json`，将你想修改的服务器的`region`改成你需要的。
 
 同时，前端还具备以下特殊旗帜，可供选择使用，启用也是需要上述修改。
 
@@ -106,32 +125,30 @@ Rainbow flag: `rainbow`
 
 Pirate flag: `pirate`
 
-## Psutil版客户端
+## Toyo版本修改方法
 
-使用Psutil版即可使ServerStatus客户端在Windows等平台运行
+如果你使用 Toyo 版本或其他版本的 ServerStatus，请备份你的config文件并重新编译安装本版本服务端
 
+配置文件: /usr/local/ServerStatus/server/config.json 备份并自行添加`region`
+
+```json
+{
+   "username": "Name",
+   "password": "Password",
+   "name": "Your Servername",
+   "type": "KVM",
+   "host": "None",
+   "location": "洛杉矶",
+   "disabled": false,
+   "region": "US"
+},
 ```
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py ::若未安装pip
-python get-pip.py
-python pip install psutil
-%修改status-psutil.py%
-python status-psutil.py
-```
 
-Linux版客户端支持绝大部分Linux发行版系统，一般不需要使用`psutil`
-
-```bash
-apt install python3 python3-pip wget
-pip3 install psutil
-wget https://raw.githubusercontent.com/cokemine/ServerStatus-Hotaru/master/clients/status-psutil.py
-vim status-psutil.py #修改客户端配置文件
-python3 status-psutil.py
-# https://raw.githubusercontent.com/cokemine/ServerStatus-Hotaru/master/clients/status-client.py 默认版本无需psutil依赖
-```
+替换配置文件，重启 ServerStatus
 
 ## 效果演示
 
-![RktuH.png](https://img.ams1.imgbed.xyz/2021/02/04/1nfJF.png)
+![RktuH.png](https://img.ams1.imgbed.xyz/2021/09/02/xbuk1.png)
 
 ## 相关开源项目 ： 
 * ServerStatus-Toyo：https://github.com/ToyoDAdoubiBackup/ServerStatus-Toyo MIT License

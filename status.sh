@@ -25,6 +25,7 @@ client_file="/usr/local/ServerStatus/client"
 client_log_file="/tmp/serverstatus_client.log"
 server_log_file="/tmp/serverstatus_server.log"
 jq_file="${file}/jq"
+[[ ! -e ${jq_file} ]] && jq_file="/usr/bin/jq"
 region_json="${file}/region.json"
 
 github_prefix="https://raw.githubusercontent.com/CokeMine/ServerStatus-Hotaru/master"
@@ -44,14 +45,14 @@ check_sys() {
     release="debian"
   elif grep -q -E -i "centos|red hat|redhat" /etc/issue; then
     release="centos"
+  elif grep -q -E -i "Arch|Manjaro" /etc/issue; then
+    release="archlinux"
   elif grep -q -E -i "debian|ubuntu" /proc/version; then
     release="debian"
   elif grep -q -E -i "centos|red hat|redhat" /proc/version; then
     release="centos"
-  elif grep -q -E -i "Arch|Manjaro" /etc/issue; then
-    release="archlinux"
   else
-    echo -e 'ServerStatus 暂不支持该Linux发行版'
+    echo -e "ServerStatus 暂不支持该Linux发行版"
   fi
   bit=$(uname -m)
 }
@@ -59,11 +60,7 @@ check_installed_server_status() {
   [[ ! -e "${server_file}/sergate" ]] && echo -e "${Error} ServerStatus 服务端没有安装，请检查 !" && exit 1
 }
 check_installed_client_status() {
-  if [[ ! -e "${client_file}/status-client.py" ]]; then
-    if [[ ! -e "${file}/status-client.py" ]]; then
-      echo -e "${Error} ServerStatus 客户端没有安装，请检查 !" && exit 1
-    fi
-  fi
+  [[ ! -e "${client_file}/status-client.py" ]] && echo -e "${Error} ServerStatus 客户端没有安装，请检查 !" && exit 1
 }
 check_pid_server() {
   #PID=$(ps -ef | grep "sergate" | grep -v grep | grep -v ".sh" | grep -v "init.d" | grep -v "service" | awk '{print $2}')
@@ -74,6 +71,8 @@ check_pid_client() {
   PID=$(pgrep -f "status-client.py")
 }
 check_region() {
+  # 如果找不到 region 文件, 默认不检测
+  [[ ! -e "${region_json}" ]] && return 0
   if ${jq_file} "[.countries | has(\"${region_s}}\")]" "${region_json}" | grep -q 'true' >/dev/null 2>&1; then
     return 0
   elif grep -qw "${region_s}" "${region_json}"; then
@@ -96,30 +95,23 @@ Download_Server_Status_server() {
   make
   [[ ! -e "sergate" ]] && echo -e "${Error} ServerStatus 服务端编译失败 !" && cd "${file_1}" && rm -rf "/tmp/ServerStatus-Hotaru-master" && exit 1
   cd "${file_1}" || exit 1
-  [[ ! -e "${file}" ]] && mkdir "${file}"
-  if [[ ! -e "${server_file}" ]]; then
-    mkdir "${server_file}"
+  mkdir -p "${server_file}"
+  if [[ -e "${server_file}/sergate" ]]; then
+    mv "${server_file}/sergate" "${server_file}/sergate1"
+    mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
+  else
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
     wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
     unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
-  else
-    if [[ -e "${server_file}/sergate" ]]; then
-      mv "${server_file}/sergate" "${server_file}/sergate1"
-      mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-    else
-      mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-      wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
-      unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
-    fi
+    rm -rf hotaru-theme.zip
   fi
+  rm -rf "/tmp/ServerStatus-Hotaru-master"
   if [[ ! -e "${server_file}/sergate" ]]; then
     echo -e "${Error} ServerStatus 服务端移动重命名失败 !"
     [[ -e "${server_file}/sergate1" ]] && mv "${server_file}/sergate1" "${server_file}/sergate"
-    rm -rf "/tmp/ServerStatus-Hotaru-master"
     exit 1
   else
     [[ -e "${server_file}/sergate1" ]] && rm -rf "${server_file}/sergate1"
-    rm -rf "/tmp/ServerStatus-Hotaru-master"
   fi
 }
 Download_Server_Status_client() {
@@ -127,18 +119,9 @@ Download_Server_Status_client() {
   wget -N --no-check-certificate "${link_prefix}/clients/status-client.py"
   [[ ! -e "status-client.py" ]] && echo -e "${Error} ServerStatus 客户端下载失败 !" && exit 1
   cd "${file_1}" || exit 1
-  [[ ! -e "${file}" ]] && mkdir "${file}"
-  if [[ ! -e "${client_file}" ]]; then
-    mkdir "${client_file}"
-    mv "/tmp/status-client.py" "${client_file}/status-client.py"
-  else
-    if [[ -e "${client_file}/status-client.py" ]]; then
-      mv "${client_file}/status-client.py" "${client_file}/status-client1.py"
-      mv "/tmp/status-client.py" "${client_file}/status-client.py"
-    else
-      mv "/tmp/status-client.py" "${client_file}/status-client.py"
-    fi
-  fi
+  mkdir -p "${client_file}"
+  [[ -e "${client_file}/status-client.py" ]] && mv "${client_file}/status-client.py" "${client_file}/status-client1.py"
+  mv "/tmp/status-client.py" "${client_file}/status-client.py"
   if [[ ! -e "${client_file}/status-client.py" ]]; then
     echo -e "${Error} ServerStatus 客户端移动失败 !"
     [[ -e "${client_file}/status-client1.py" ]] && mv "${client_file}/status-client1.py" "${client_file}/status-client.py"
@@ -149,137 +132,58 @@ Download_Server_Status_client() {
     rm -rf "/tmp/status-client.py"
   fi
 }
-Service_Server_Status_server() {
-  if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_centos" -O /etc/init.d/status-server; then
-      echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-server
-    chkconfig --add status-server
-    chkconfig status-server on
-  elif [[ ${release} == "debian" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_debian" -O /etc/init.d/status-server; then
-      echo -e "${Error} ServerStatus 服务端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-server
-    update-rc.d -f status-server defaults
-  elif [[ ${release} == "archlinux" ]]; then
-    if [ ! -d "/etc/init.d" ]; then
-      mkdir /etc/init.d
-    fi
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_server_archlinux" -O /etc/init.d/status-server; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-server
-    cat >/usr/lib/systemd/system/status-server.service <<-EOF
-[Unit]
-Description=Statusserver
-Documentation=https://github.com/cokemine/ServerStatus-Hotaru
-After=network.target
-[Service]
-ExecStart=/etc/init.d/status-server start
-ExecStop=/etc/init.d/status-server stop
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-    systemctl enable status-server.service
+Download_Server_Status_Service() {
+  mode=$1
+  [[ -z ${mode} ]] && mode="server"
+  local service_note="服务端"
+  [[ ${mode} == "client" ]] && service_note="客户端"
+  if [[ ${release} == "archlinux" ]]; then
+    wget --no-check-certificate "${link_prefix}/service/status-${mode}.service" -O "/usr/lib/systemd/system/status-${mode}.service" ||
+      {
+        echo -e "${Error} ServerStatus ${service_note}服务管理脚本下载失败 !"
+        exit 1
+      }
+    systemctl enable "status-${mode}.service"
+  else
+    wget --no-check-certificate "${link_prefix}/service/server_status_${mode}_${release}" -O "/etc/init.d/status-${mode}" ||
+      {
+        echo -e "${Error} ServerStatus ${service_note}服务管理脚本下载失败 !"
+        exit 1
+      }
+    chmod +x "/etc/init.d/status-${mode}"
+    [[ ${release} == "centos" ]] &&
+      {
+        chkconfig --add "status-${mode}"
+        chkconfig "status-${mode}" on
+      }
+
+    [[ ${release} == "debian" ]] && update-rc.d -f "status-${mode}" defaults
   fi
-  echo -e "${Info} ServerStatus 服务端服务管理脚本下载完成 !"
+  echo -e "${Info} ServerStatus ${service_note}服务管理脚本下载完成 !"
+}
+Service_Server_Status_server() {
+  Download_Server_Status_Service "server"
 }
 Service_Server_Status_client() {
-  if [[ ${release} == "centos" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_centos" -O /etc/init.d/status-client; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-client
-    chkconfig --add status-client
-    chkconfig status-client on
-  elif [[ ${release} == "debian" ]]; then
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_debian" -O /etc/init.d/status-client; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-client
-    update-rc.d -f status-client defaults
-  elif [[ ${release} == "archlinux" ]]; then
-    if [ ! -d "/etc/init.d" ]; then
-      mkdir /etc/init.d
-    fi
-    if ! wget --no-check-certificate "${link_prefix}/service/server_status_client_archlinux" -O /etc/init.d/status-client; then
-      echo -e "${Error} ServerStatus 客户端服务管理脚本下载失败 !" && exit 1
-    fi
-    chmod +x /etc/init.d/status-client
-    cat >/usr/lib/systemd/system/status-client.service <<-EOF
-[Unit]
-Description=StatusClient
-Documentation=https://github.com/cokemine/ServerStatus-Hotaru
-After=network.target
-[Service]
-ExecStart=/etc/init.d/status-client start
-ExecStop=/etc/init.d/status-client stop
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-    systemctl enable status-client.service
-  fi
-  echo -e "${Info} ServerStatus 客户端服务管理脚本下载完成 !"
+  Download_Server_Status_Service "client"
 }
 Installation_dependency() {
   mode=$1
-  if python3 --help >/dev/null 2>&1; then
-    ln -s /usr/bin/python3 /usr/bin/python
-    python_status=1
-  elif python --help >/dev/null 2>&1; then
-    python_status=1
-  else
-    python_status=0
+  if [[ ${release} == "centos" ]]; then
+    yum -y update
+    yum -y install unzip
+    yum -y install python3 >/dev/null 2>&1 || yum -y install python
+    [[ ${mode} == "server" ]] && yum -y groupinstall "Development Tools"
+  elif [[ ${release} == "debian" ]]; then
+    apt-get -y update
+    apt-get -y install unzip
+    apt-get -y install python3 >/dev/null 2>&1 || apt-get -y install python
+    [[ ${mode} == "server" ]] && apt-get -y install build-essential
+  elif [[ ${release} == "archlinux" ]]; then
+    pacman -Sy python python-pip unzip --noconfirm
+    [[ ${mode} == "server" ]] && pacman -Sy base-devel --noconfirm
   fi
-  if [[ ${mode} == "server" ]]; then
-    if [[ ${release} == "centos" ]]; then
-      yum -y update
-      if [ ${python_status} -eq 0 ]; then
-        yum -y install python3 unzip vim make
-        ln -s /usr/bin/python3 /usr/bin/python
-        yum -y groupinstall "Development Tools"
-      elif [ ${python_status} -eq 1 ]; then
-        yum -y install unzip vim make
-        yum -y groupinstall "Development Tools"
-      fi
-    elif [[ ${release} == "debian" ]]; then
-      apt-get update -y
-      if [ ${python_status} -eq 0 ]; then
-        apt-get -y install python3 unzip vim build-essential
-        ln -s /usr/bin/python3 /usr/bin/python
-      elif [ ${python_status} -eq 1 ]; then
-        apt-get -y install unzip vim build-essential
-      fi
-    elif [[ ${release} == "archlinux" ]]; then
-      if [ ${python_status} -eq 0 ]; then
-        pacman -Sy python python-pip --noconfirm
-      elif [ ${python_status} -eq 1 ]; then
-        pacman -Sy base-devel --noconfirm
-      fi
-    fi
-  elif [[ ${mode} == "client" ]]; then
-    if [ ${release} == "centos" ]; then
-      if [ "${python_status}" -eq 0 ]; then
-        yum -y update
-        yum -y install python3
-        ln -s /usr/bin/python3 /usr/bin/python
-      fi
-    elif [[ ${release} == "debian" ]]; then
-      if [ "${python_status}" -eq 0 ]; then
-        apt-get -y update
-        apt-get -y install python3
-        ln -s /usr/bin/python3 /usr/bin/python
-      fi
-    elif [[ ${release} == "archlinux" ]]; then
-      if [ ${python_status} -eq 0 ]; then
-        pacman -Sy python python-pip --noconfirm
-      fi
-    fi
-  fi
+  [[ ! -e /usr/bin/python ]] && ln -s /usr/bin/python3 /usr/bin/python
 }
 Write_server_config() {
   cat >${server_conf} <<-EOF
@@ -305,16 +209,7 @@ PORT = ${server_port_s}
 EOF
 }
 Read_config_client() {
-  if [[ ! -e "${client_file}/status-client.py" ]]; then
-    if [[ ! -e "${file}/status-client.py" ]]; then
-      echo -e "${Error} ServerStatus 客户端文件不存在 !" && exit 1
-    else
-      client_text="$(sed 's/\"//g;s/,//g;s/ //g' "${file}/status-client.py")"
-      rm -rf "${file}/status-client.py"
-    fi
-  else
-    client_text="$(sed 's/\"//g;s/,//g;s/ //g' "${client_file}/status-client.py") "
-  fi
+  client_text="$(sed 's/\"//g;s/,//g;s/ //g' "${client_file}/status-client.py") "
   client_server="$(echo -e "${client_text}" | grep "SERVER=" | awk -F "=" '{print $2}')"
   client_port="$(echo -e "${client_text}" | grep "PORT=" | awk -F "=" '{print $2}')"
   client_user="$(echo -e "${client_text}" | grep "USER=" | awk -F "=" '{print $2}')"
@@ -511,10 +406,8 @@ Set_ServerStatus_server() {
     Modify_ServerStatus_server_disabled
   elif [[ ${server_num} == "11" ]]; then
     Read_config_server
-    Del_iptables "${server_port}"
     Set_server_port
     Write_server_config_conf
-    Add_iptables "${server_port_s}"
   else
     echo -e "${Error} 请输入正确的数字[1-11]" && exit 1
   fi
@@ -737,9 +630,7 @@ Set_ServerStatus_client() {
   check_installed_client_status
   Set_config_client
   Read_config_client
-  Del_iptables_OUT "${client_port}"
   Modify_config_client
-  Add_iptables_OUT "${server_port_s}"
   Restart_ServerStatus_client
 }
 Install_vnStat() {
@@ -768,18 +659,18 @@ Install_vnStat() {
   vnstatd -d
   if [[ ${release} == "centos" ]]; then
     if grep "6\..*" /etc/redhat-release | grep -i "centos" | grep -v "{^6}\.6" >/dev/null; then
-      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/redhat/vnstat /etc/init.d/
+      [[ ! -e /etc/init.d/vnstat ]] && cp examples/init.d/redhat/vnstat /etc/init.d/
       chkconfig vnstat on
       service vnstat restart
     fi
   else
     if grep -i "debian" /etc/issue | grep -q "7" || grep -i "ubuntu" /etc/issue | grep -q "14"; then
-      [ ! -e /etc/init.d/vnstat ] && cp examples/init.d/debian/vnstat /etc/init.d/
+      [[ ! -e /etc/init.d/vnstat ]] && cp examples/init.d/debian/vnstat /etc/init.d/
       update-rc.d vnstat defaults
       service vnstat restart
     fi
   fi
-  if [ ! -e /etc/init.d/vnstat ]; then
+  if [[ ! -e /etc/init.d/vnstat ]]; then
     cp -v examples/systemd/simple/vnstat.service /etc/systemd/system/
     systemctl enable vnstat
     systemctl start vnstat
@@ -827,9 +718,16 @@ Modify_config_client() {
 Install_jq() {
   if [[ ! -e ${jq_file} ]]; then
     if [[ ${bit} == "x86_64" ]]; then
+      jq_file="${file}/jq"
       wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
-    else
+    elif [[ ${bit} == "i386" ]]; then
+      jq_file="${file}/jq"
       wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
+    else
+      [[ ${release} == "archlinux" ]] && pacman -Sy jq --noconfirm
+      [[ ${release} == "centos" ]] && yum -y install jq
+      [[ ${release} == "debian" ]] && apt-get -y install jq
+      jq_file="/usr/bin/jq"
     fi
     [[ ! -e ${jq_file} ]] && echo -e "${Error} JQ解析器 下载失败，请检查 !" && exit 1
     chmod +x ${jq_file}
@@ -849,51 +747,35 @@ Install_caddy() {
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
   if [[ "${caddy_yn}" == [Yy] ]]; then
     if [[ ${release} == "archlinux" ]]; then
-      pacman -Sy caddy --noconfirm
-      systemctl enable caddy
-      Set_server "server"
-      Set_server_http_port
-      cat >>"/etc/caddy/conf.d/Caddyfile" <<-EOF
+      [[ ! -e /usr/bin/caddy ]] && {
+        pacman -Sy caddy --noconfirm
+        systemctl enable caddy
+      }
+      local caddy_file="/etc/caddy/conf.d/Caddyfile"
+    else
+      [[ ! -e "/usr/local/caddy/caddy" ]] && {
+        wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
+        bash caddy_install.sh install
+        rm -rf caddy_install.sh
+      }
+      local caddy_file="/usr/local/caddy/Caddyfile"
+    fi
+    Set_server "server"
+    Set_server_http_port
+    cat >>${caddy_file} <<-EOF
 http://${server_s}:${server_http_port_s} {
   root * ${web_file}
   encode gzip
   file_server
 }
 EOF
+    [[ ! -e "/usr/local/caddy/caddy" && ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
+    if [[ ${release} == "archlinux" ]]; then
       systemctl restart caddy
-      return 0
-    fi
-    Set_server "server"
-    Set_server_http_port
-    if [[ ! -e "/usr/local/caddy/caddy" ]]; then
-      wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
-      chmod +x caddy_install.sh
-      bash caddy_install.sh install
-      rm -rf caddy_install.sh
-      [[ ! -e "/usr/local/caddy/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
     else
-      echo -e "${Info} 发现Caddy已安装，开始配置..."
-    fi
-    if [[ ! -s "/usr/local/caddy/Caddyfile" ]]; then
-      cat >"/usr/local/caddy/Caddyfile" <<-EOF
-http://${server_s}:${server_http_port_s} {
- root * ${web_file}
- encode gzip
- file_server
-}
-EOF
-      /etc/init.d/caddy restart
-    else
-      echo -e "${Info} 发现 Caddy 配置文件非空，开始追加 ServerStatus 网站配置内容到文件最后..."
-      cat >>"/usr/local/caddy/Caddyfile" <<-EOF
-http://${server_s}:${server_http_port_s} {
- root * ${web_file}
- encode gzip
- file_server
-}
-EOF
       /etc/init.d/caddy restart
     fi
+    echo -e "${Info} 发现 Caddy 配置文件非空，开始追加 ServerStatus 网站配置内容到文件最后..."
   else
     echo -e "${Info} 跳过 HTTP服务部署，请手动部署，Web网页文件位置：${web_file} ，如果位置改变，请注意修改服务脚本文件 /etc/init.d/status-server 中的 WEB_BIN 变量 !"
   fi
@@ -913,13 +795,6 @@ Install_ServerStatus_server() {
   echo -e "${Info} 开始写入 配置文件..."
   Write_server_config
   Write_server_config_conf
-  echo -e "${Info} 开始设置 iptables防火墙..."
-  Set_iptables
-  echo -e "${Info} 开始添加 iptables防火墙规则..."
-  Add_iptables "${server_port_s}"
-  [[ -n "${server_http_port_s}" ]] && Add_iptables "${server_http_port_s}"
-  echo -e "${Info} 开始保存 iptables防火墙规则..."
-  Save_iptables
   echo -e "${Info} 所有步骤 安装完毕，开始启动..."
   Start_ServerStatus_server
 }
@@ -949,12 +824,6 @@ Install_ServerStatus_client() {
   echo -e "${Info} 开始写入 配置..."
   Read_config_client
   Modify_config_client
-  echo -e "${Info} 开始设置 iptables防火墙..."
-  Set_iptables
-  echo -e "${Info} 开始添加 iptables防火墙规则..."
-  Add_iptables_OUT "${server_port_s}"
-  echo -e "${Info} 开始保存 iptables防火墙规则..."
-  Save_iptables
   echo -e "${Info} 所有步骤 安装完毕，开始启动..."
   Start_ServerStatus_client
 }
@@ -1053,8 +922,6 @@ Uninstall_ServerStatus_server() {
     check_pid_server
     [[ -n $PID ]] && kill -9 "${PID}"
     Read_config_server
-    Del_iptables "${server_port}"
-    Save_iptables
     if [[ -e "${client_file}/status-client.py" ]]; then
       rm -rf "${server_file}"
       rm -rf "${web_file}"
@@ -1130,8 +997,6 @@ Uninstall_ServerStatus_client() {
     check_pid_client
     [[ -n $PID ]] && kill -9 "${PID}"
     Read_config_client
-    Del_iptables_OUT "${client_port}"
-    Save_iptables
     if [[ -e "${server_file}/sergate" ]]; then
       rm -rf "${client_file}"
     else
@@ -1176,53 +1041,18 @@ View_server_Log() {
   echo && echo -e "${Tip} 按 ${Red_font_prefix}Ctrl+C${Font_color_suffix} 终止查看日志" && echo -e "如果需要查看完整日志内容，请用 ${Red_font_prefix}cat ${server_log_file}${Font_color_suffix} 命令。" && echo
   tail -f ${server_log_file}
 }
-Add_iptables_OUT() {
-  iptables_ADD_OUT_port=$1
-  iptables -I OUTPUT -m state --state NEW -m tcp -p tcp --dport "${iptables_ADD_OUT_port}" -j ACCEPT
-  iptables -I OUTPUT -m state --state NEW -m udp -p udp --dport "${iptables_ADD_OUT_port}" -j ACCEPT
-}
-Del_iptables_OUT() {
-  iptables_DEL_OUT_port=$1
-  iptables -D OUTPUT -m state --state NEW -m tcp -p tcp --dport "${iptables_DEL_OUT_port}" -j ACCEPT
-  iptables -D OUTPUT -m state --state NEW -m udp -p udp --dport "${iptables_DEL_OUT_port}" -j ACCEPT
-}
-Add_iptables() {
-  iptables_ADD_IN_port=$1
-  iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport "${iptables_ADD_IN_port}" -j ACCEPT
-  iptables -I INPUT -m state --state NEW -m udp -p udp --dport "${iptables_ADD_IN_port}" -j ACCEPT
-}
-Del_iptables() {
-  iptables_DEL_IN_port=$1
-  iptables -D INPUT -m state --state NEW -m tcp -p tcp --dport "${iptables_DEL_IN_port}" -j ACCEPT
-  iptables -D INPUT -m state --state NEW -m udp -p udp --dport "${iptables_DEL_IN_port}" -j ACCEPT
-}
-Save_iptables() {
-  if [[ ${release} == "centos" ]]; then
-    service iptables save
-  else
-    iptables-save >/etc/iptables.up.rules
-  fi
-}
-Set_iptables() {
-  if [[ ${release} == "centos" ]]; then
-    service iptables save
-    chkconfig --level 2345 iptables on
-  else
-    iptables-save >/etc/iptables.up.rules
-    echo -e '#!/bin/bash\n/sbin/iptables-restore < /etc/iptables.up.rules' >/etc/network/if-pre-up.d/iptables
-    chmod +x /etc/network/if-pre-up.d/iptables
-  fi
-}
 Update_Shell() {
   Set_Mirror
   sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "${link_prefix}/status.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1)
   [[ -z ${sh_new_ver} ]] && echo -e "${Error} 无法链接到 Github !" && exit 0
-  if [[ -e "/etc/init.d/status-client" ]]; then
+  if [[ -e "/etc/init.d/status-client" ]] || [[ -e "/usr/lib/systemd/system/status-client.service" ]]; then
     rm -rf /etc/init.d/status-client
+    rm -rf /usr/lib/systemd/system/status-client.service
     Service_Server_Status_client
   fi
-  if [[ -e "/etc/init.d/status-server" ]]; then
+  if [[ -e "/etc/init.d/status-server" ]] || [[ -e "/usr/lib/systemd/system/status-server.service" ]]; then
     rm -rf /etc/init.d/status-server
+    rm -rf /usr/lib/systemd/system/status-server.service
     Service_Server_Status_server
   fi
   wget -N --no-check-certificate "${link_prefix}/status.sh" && chmod +x status.sh

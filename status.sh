@@ -103,6 +103,7 @@ Download_Server_Status_server() {
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
     wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
     unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
+    rm -rf hotaru-theme.zip
   fi
   rm -rf "/tmp/ServerStatus-Hotaru-master"
   if [[ ! -e "${server_file}/sergate" ]]; then

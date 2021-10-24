@@ -85,6 +85,7 @@ check_region() {
 Download_Server_Status_server() {
   cd "/tmp" || exit 1
   [[ ${mirror_num} == 2 ]] && bundle_link="https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/archive/master/?download=true" || bundle_link="https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip"
+  [[ ${mirror_num} == 2 ]] && github_link="https://hub.fastgit.org" || github_link="https://github.com"
   wget -N --no-check-certificate "${bundle_link}" -O "master.zip"
   [[ ! -e "master.zip" ]] && echo -e "${Error} ServerStatus 服务端下载失败 !" && exit 1
   unzip master.zip
@@ -101,7 +102,7 @@ Download_Server_Status_server() {
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
   else
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-    wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+    wget -N --no-check-certificate "${github_link}/cokemine/hotaru_theme/releases/latest/download/hotaru-theme.zip"
     unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
     rm -rf hotaru-theme.zip
   fi
@@ -716,14 +717,22 @@ Modify_config_client() {
   Modify_config_client_traffic
 }
 Install_jq() {
+  [[ ${mirror_num} == 2 ]] && {
+    github_link="https://hub.fastgit.org";
+    raw_link="https://raw.githubusercontent.com"
+  } || {
+    github_link="https://github.com"
+    raw_link="https://raw.fastgit.org"
+  }
   if [[ ! -e ${jq_file} ]]; then
     if [[ ${bit} == "x86_64" ]]; then
       jq_file="${file}/jq"
-      wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
+      wget --no-check-certificate "${github_link}/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
     elif [[ ${bit} == "i386" ]]; then
       jq_file="${file}/jq"
-      wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
+      wget --no-check-certificate "${github_link}/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
     else
+      # ARM fallback to package manager
       [[ ${release} == "archlinux" ]] && pacman -Sy jq --noconfirm
       [[ ${release} == "centos" ]] && yum -y install jq
       [[ ${release} == "debian" ]] && apt-get -y install jq
@@ -736,7 +745,7 @@ Install_jq() {
     echo -e "${Info} JQ解析器 已安装，继续..."
   fi
   if [[ ! -e ${region_json} ]]; then
-    wget --no-check-certificate "https://raw.githubusercontent.com/michaelwittig/node-i18n-iso-countries/master/langs/zh.json" -O ${region_json}
+    wget --no-check-certificate "${raw_link}/michaelwittig/node-i18n-iso-countries/master/langs/zh.json" -O ${region_json}
     [[ ! -e ${region_json} ]] && echo -e "${Error} ISO 3166-1 json文件下载失败，请检查！" && exit 1
   fi
 }
@@ -1210,7 +1219,7 @@ menu_server() {
 Set_Mirror() {
   echo -e "${Info} 请输入要选择的下载源，默认使用GitHub，中国大陆建议选择Coding.net，但是不建议将服务端部署在中国大陆主机上
   ${Green_font_prefix} 1.${Font_color_suffix} GitHub
-  ${Green_font_prefix} 2.${Font_color_suffix} Coding.net (服务端安装并非全部使用Coding.net仓库)"
+  ${Green_font_prefix} 2.${Font_color_suffix} Coding.net (部分资源通过 FastGit 提供服务下载, Thanks to FastGit.org for the service)"
   read -erp "请输入数字 [1-2], 默认为 1:" mirror_num
   [[ -z "${mirror_num}" ]] && mirror_num=1
   [[ ${mirror_num} == 2 ]] && link_prefix=${coding_prefix} || link_prefix=${github_prefix}

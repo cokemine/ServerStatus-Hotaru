@@ -718,7 +718,7 @@ Modify_config_client() {
 }
 Install_jq() {
   [[ ${mirror_num} == 2 ]] && {
-    github_link="https://hub.fastgit.org";
+    github_link="https://hub.fastgit.org"
     raw_link="https://raw.githubusercontent.com"
   } || {
     github_link="https://github.com"
@@ -754,20 +754,27 @@ Install_caddy() {
   echo -e "${Info} 是否由脚本自动配置HTTP服务(服务端的在线监控网站)，如果选择 N，则请在其他HTTP服务中配置网站根目录为：${Green_font_prefix}${web_file}${Font_color_suffix} [Y/n]"
   read -erp "(默认: Y 自动部署):" caddy_yn
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
+  [[ ${release} == "archlinux" ]] && caddy_file="/etc/caddy/conf.d/Caddyfile" || caddy_file="/usr/local/caddy/Caddyfile"
   if [[ "${caddy_yn}" == [Yy] ]]; then
+    if [[ ${release} == "debian" ]]; then
+      [[ ! -e /usr/bin/caddy ]] && {
+        apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
+        curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/gpg.key" | tee /etc/apt/trusted.gpg.d/caddy-stable.asc
+        curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt" | tee /etc/apt/sources.list.d/caddy-stable.list
+        apt-get update && apt-get install caddy
+      }
+    fi
     if [[ ${release} == "archlinux" ]]; then
       [[ ! -e /usr/bin/caddy ]] && {
         pacman -Sy caddy --noconfirm
         systemctl enable caddy
       }
-      local caddy_file="/etc/caddy/conf.d/Caddyfile"
     else
       [[ ! -e "/usr/local/caddy/caddy" ]] && {
         wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
         bash caddy_install.sh install
         rm -rf caddy_install.sh
       }
-      local caddy_file="/usr/local/caddy/Caddyfile"
     fi
     Set_server "server"
     Set_server_http_port

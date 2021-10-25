@@ -719,10 +719,10 @@ Modify_config_client() {
 Install_jq() {
   [[ ${mirror_num} == 2 ]] && {
     github_link="https://hub.fastgit.org"
-    raw_link="https://raw.githubusercontent.com"
+    raw_link="https://raw.fastgit.org"
   } || {
     github_link="https://github.com"
-    raw_link="https://raw.fastgit.org"
+    raw_link="https://raw.githubusercontent.com"
   }
   if [[ ! -e ${jq_file} ]]; then
     if [[ ${bit} == "x86_64" ]]; then
@@ -755,7 +755,7 @@ Install_caddy() {
   read -erp "(默认: Y 自动部署):" caddy_yn
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
   if [[ "${caddy_yn}" == [Yy] ]]; then
-    [[ ${release} == "archlinux" ]] && caddy_file="/etc/caddy/conf.d/Caddyfile" || caddy_file="/usr/local/caddy/Caddyfile"
+    [[ ${release} == "archlinux" ]] && caddy_file="/etc/caddy/conf.d/Caddyfile" || caddy_file="/etc/caddy/Caddyfile"
     [[ ! -e /usr/bin/caddy ]] && {
       if [[ ${release} == "debian" ]]; then
         apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
@@ -935,18 +935,12 @@ Uninstall_ServerStatus_server() {
       rm -rf "${file}"
     fi
     rm -rf "/etc/init.d/status-server"
-    if [[ -e "/etc/init.d/caddy" ]]; then
-      if [[ ${release} == "archlinux" ]]; then
-        systemctl stop caddy
-        systemctl disable caddy
-        pacman -R caddy --noconfirm
-      else
-        /etc/init.d/caddy stop
-        wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
-        chmod +x caddy_install.sh
-        bash caddy_install.sh uninstall
-        rm -rf caddy_install.sh
-      fi
+    if [[ -e "/usr/bin/caddy" ]]; then
+      systemctl stop caddy
+      systemctl disable caddy
+      [[ ${release} == "debian" ]] && apt-get purge -y caddy
+      [[ ${release} == "centos" ]] && yum -y remove caddy
+      [[ ${release} == "archlinux" ]] && pacman -R caddy --noconfirm
     fi
     if [[ ${release} == "centos" ]]; then
       chkconfig --del status-server

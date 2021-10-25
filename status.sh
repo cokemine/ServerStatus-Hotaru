@@ -5,11 +5,11 @@ export PATH
 #=================================================
 #  System Required: CentOS/Debian/Ubuntu/ArchLinux
 #  Description: ServerStatus client + server
-#  Version: Test v0.2.0
+#  Version: Test v0.4.0
 #  Author: Toyo,Modified by APTX
 #=================================================
 
-sh_ver="0.3.1"
+sh_ver="0.4.0"
 filepath=$(
   cd "$(dirname "$0")" || exit
   pwd
@@ -755,7 +755,7 @@ Install_caddy() {
   read -erp "(默认: Y 自动部署):" caddy_yn
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
   if [[ "${caddy_yn}" == [Yy] ]]; then
-    [[ ${release} == "archlinux" ]] && caddy_file="/etc/caddy/conf.d/Caddyfile" || caddy_file="/etc/caddy/Caddyfile"
+    caddy_file="/etc/caddy/Caddyfile" # Where is the default Caddyfile specified in Archlinux?
     [[ ! -e /usr/bin/caddy ]] && {
       if [[ ${release} == "debian" ]]; then
         apt-get install -y debian-keyring debian-archive-keyring apt-transport-https

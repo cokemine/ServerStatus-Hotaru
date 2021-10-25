@@ -5,11 +5,11 @@ export PATH
 #=================================================
 #  System Required: CentOS/Debian/Ubuntu/ArchLinux
 #  Description: ServerStatus client + server
-#  Version: Test v0.4.0
+#  Version: Test v0.4.1
 #  Author: Toyo,Modified by APTX
 #=================================================
 
-sh_ver="0.4.0"
+sh_ver="0.4.1"
 filepath=$(
   cd "$(dirname "$0")" || exit
   pwd
@@ -176,10 +176,10 @@ Installation_dependency() {
     yum -y install python3 >/dev/null 2>&1 || yum -y install python
     [[ ${mode} == "server" ]] && yum -y groupinstall "Development Tools"
   elif [[ ${release} == "debian" ]]; then
-    apt-get -y update
-    apt-get -y install unzip
-    apt-get -y install python3 >/dev/null 2>&1 || apt-get -y install python
-    [[ ${mode} == "server" ]] && apt-get -y install build-essential
+    apt -y update
+    apt -y install unzip
+    apt -y install python3 >/dev/null 2>&1 || apt -y install python
+    [[ ${mode} == "server" ]] && apt -y install build-essential
   elif [[ ${release} == "archlinux" ]]; then
     pacman -Sy python python-pip unzip --noconfirm
     [[ ${mode} == "server" ]] && pacman -Sy base-devel --noconfirm
@@ -645,8 +645,8 @@ Install_vnStat() {
     yum -y install sqlite sqlite-devel
     yum -y groupinstall "Development Tools"
   elif [[ ${release} == "debian" ]]; then
-    apt-get -y update
-    apt-get -y install sqlite3 libsqlite3-dev build-essential
+    apt -y update
+    apt -y install sqlite3 libsqlite3-dev build-essential
   fi
   cd "/tmp" || return 1
   wget --no-check-certificate https://humdi.net/vnstat/vnstat-latest.tar.gz
@@ -735,7 +735,7 @@ Install_jq() {
       # ARM fallback to package manager
       [[ ${release} == "archlinux" ]] && pacman -Sy jq --noconfirm
       [[ ${release} == "centos" ]] && yum -y install jq
-      [[ ${release} == "debian" ]] && apt-get -y install jq
+      [[ ${release} == "debian" ]] && apt -y install jq
       jq_file="/usr/bin/jq"
     fi
     [[ ! -e ${jq_file} ]] && echo -e "${Error} JQ解析器 下载失败，请检查 !" && exit 1
@@ -758,10 +758,10 @@ Install_caddy() {
     caddy_file="/etc/caddy/Caddyfile" # Where is the default Caddyfile specified in Archlinux?
     [[ ! -e /usr/bin/caddy ]] && {
       if [[ ${release} == "debian" ]]; then
-        apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
+        apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
         curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/gpg.key" | tee /etc/apt/trusted.gpg.d/caddy-stable.asc
         curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt" | tee /etc/apt/sources.list.d/caddy-stable.list
-        apt-get update && apt-get install caddy
+        apt update && apt install caddy
       elif [[ ${release} == "centos" ]]; then
         yum install yum-plugin-copr -y
         yum copr enable @caddy/caddy -y
@@ -939,7 +939,7 @@ Uninstall_ServerStatus_server() {
     if [[ -e "/usr/bin/caddy" ]]; then
       systemctl stop caddy
       systemctl disable caddy
-      [[ ${release} == "debian" ]] && apt-get purge -y caddy
+      [[ ${release} == "debian" ]] && apt purge -y caddy
       [[ ${release} == "centos" ]] && yum -y remove caddy
       [[ ${release} == "archlinux" ]] && pacman -R caddy --noconfirm
     fi

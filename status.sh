@@ -771,6 +771,7 @@ Install_caddy() {
       fi
       [[ ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
       systemctl enable caddy
+      echo "" >${caddy_file}
     }
     Set_server "server"
     Set_server_http_port

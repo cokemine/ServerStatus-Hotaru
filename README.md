@@ -5,15 +5,15 @@
 
 ## 特性
 
-服务端客户端脚本支持系统：Centos 7、Debian 7、Ubuntu 14.04 及以上、ArchLinux
+服务端客户端脚本支持系统：Centos 7、Debian 8、Ubuntu 15.10 及以上、ArchLinux
 
-客户端支持 Python 版本：Python 2.7 - Python 3
+Python 客户端：支持 Python 版本：Python 2.7+
 
-Golang客户端：如果您的客户端环境无法使用 Python， 可以使用 Golang 编写的客户端
+Go 客户端：如果您的客户端环境无法使用 Python， 可以使用 Go 编写的客户端
 
 开源地址：https://github.com/cokemine/ServerStatus-goclient
 
-流量计算：客户端可以选择使用 vnStat 按月计算流量，会自动编译安装最新版本vnStat（ArchLinux 会从软件源安装最新版本）。如不使用 vnStat ，则默认计算流量方式为重启后流量清零。请注意 ServerStatus 不会与协议为 GPLv2 的 vnStat 强耦合。
+流量计算：客户端可以选择使用 vnStat 按月计算流量，会自动编译安装最新版本vnStat（ArchLinux 会从软件源安装最新版本）。如不使用 vnStat ，则默认计算流量方式为重启后流量清零。请注意 ServerStatus 不会把协议为 GPLv2 的 vnStat 作为必须的依赖。
 
 前端基于 Vue 3.0 和 SemanticUI 制作，如需修改前端建议自行修改打包。
 
@@ -27,13 +27,19 @@ ServerStatus-Hotaru 将会停留在轻量级的 ServerStatus，不会再添加�
 
 如果你有以下需求：
 
-1、Websocket
+1、更低的 IO 占用
 
-2、Docker
+2、Websocket 支持
 
-3、客户端掉线 Telegram Bot 通知
+3、Docker 支持
 
-4、使用 Web 管理、添加、修改客户端信息
+4、更方便服务器的顺序调整
+
+5、客户端掉线 Telegram Bot 通知
+
+6、使用 Web 管理、添加、修改客户端信息
+
+7、等等
 
 欢迎使用 NodeStatus: https://github.com/cokemine/nodestatus （请到 beta 版再实际使用）
 

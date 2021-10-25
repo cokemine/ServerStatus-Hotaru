@@ -754,28 +754,24 @@ Install_caddy() {
   echo -e "${Info} 是否由脚本自动配置HTTP服务(服务端的在线监控网站)，如果选择 N，则请在其他HTTP服务中配置网站根目录为：${Green_font_prefix}${web_file}${Font_color_suffix} [Y/n]"
   read -erp "(默认: Y 自动部署):" caddy_yn
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
-  [[ ${release} == "archlinux" ]] && caddy_file="/etc/caddy/conf.d/Caddyfile" || caddy_file="/usr/local/caddy/Caddyfile"
   if [[ "${caddy_yn}" == [Yy] ]]; then
-    if [[ ${release} == "debian" ]]; then
-      [[ ! -e /usr/bin/caddy ]] && {
+    [[ ${release} == "archlinux" ]] && caddy_file="/etc/caddy/conf.d/Caddyfile" || caddy_file="/usr/local/caddy/Caddyfile"
+    [[ ! -e /usr/bin/caddy ]] && {
+      if [[ ${release} == "debian" ]]; then
         apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
         curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/gpg.key" | tee /etc/apt/trusted.gpg.d/caddy-stable.asc
         curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt" | tee /etc/apt/sources.list.d/caddy-stable.list
         apt-get update && apt-get install caddy
-      }
-    fi
-    if [[ ${release} == "archlinux" ]]; then
-      [[ ! -e /usr/bin/caddy ]] && {
+      elif [[ ${release} == "centos" ]]; then
+        yum install yum-plugin-copr -y
+        yum copr enable @caddy/caddy -y
+        yum install caddy -y
+      elif [[ ${release} == "archlinux" ]]; then
         pacman -Sy caddy --noconfirm
-        systemctl enable caddy
-      }
-    else
-      [[ ! -e "/usr/local/caddy/caddy" ]] && {
-        wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
-        bash caddy_install.sh install
-        rm -rf caddy_install.sh
-      }
-    fi
+      fi
+      [[ ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
+      systemctl enable caddy
+    }
     Set_server "server"
     Set_server_http_port
     cat >>${caddy_file} <<-EOF
@@ -785,13 +781,7 @@ http://${server_s}:${server_http_port_s} {
   file_server
 }
 EOF
-    [[ ! -e "/usr/local/caddy/caddy" && ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
-    if [[ ${release} == "archlinux" ]]; then
-      systemctl restart caddy
-    else
-      /etc/init.d/caddy restart
-    fi
-    echo -e "${Info} 发现 Caddy 配置文件非空，开始追加 ServerStatus 网站配置内容到文件最后..."
+    systemctl restart caddy
   else
     echo -e "${Info} 跳过 HTTP服务部署，请手动部署，Web网页文件位置：${web_file} ，如果位置改变，请注意修改服务脚本文件 /etc/init.d/status-server 中的 WEB_BIN 变量 !"
   fi

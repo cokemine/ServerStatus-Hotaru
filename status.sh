@@ -5,11 +5,11 @@ export PATH
 #=================================================
 #  System Required: CentOS/Debian/Ubuntu/ArchLinux
 #  Description: ServerStatus client + server
-#  Version: Test v0.2.0
+#  Version: Test v0.4.0
 #  Author: Toyo,Modified by APTX
 #=================================================
 
-sh_ver="0.3.1"
+sh_ver="0.4.0"
 filepath=$(
   cd "$(dirname "$0")" || exit
   pwd
@@ -85,6 +85,7 @@ check_region() {
 Download_Server_Status_server() {
   cd "/tmp" || exit 1
   [[ ${mirror_num} == 2 ]] && bundle_link="https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/archive/master/?download=true" || bundle_link="https://github.com/CokeMine/ServerStatus-Hotaru/archive/master.zip"
+  [[ ${mirror_num} == 2 ]] && github_link="https://hub.fastgit.org" || github_link="https://github.com"
   wget -N --no-check-certificate "${bundle_link}" -O "master.zip"
   [[ ! -e "master.zip" ]] && echo -e "${Error} ServerStatus 服务端下载失败 !" && exit 1
   unzip master.zip
@@ -101,7 +102,7 @@ Download_Server_Status_server() {
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
   else
     mv "/tmp/ServerStatus-Hotaru-master/server/sergate" "${server_file}/sergate"
-    wget -N --no-check-certificate https://github.com/CokeMine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+    wget -N --no-check-certificate "${github_link}/cokemine/hotaru_theme/releases/latest/download/hotaru-theme.zip"
     unzip hotaru-theme.zip && mv "./hotaru-theme" "${web_file}"
     rm -rf hotaru-theme.zip
   fi
@@ -716,14 +717,22 @@ Modify_config_client() {
   Modify_config_client_traffic
 }
 Install_jq() {
+  [[ ${mirror_num} == 2 ]] && {
+    github_link="https://hub.fastgit.org"
+    raw_link="https://raw.fastgit.org"
+  } || {
+    github_link="https://github.com"
+    raw_link="https://raw.githubusercontent.com"
+  }
   if [[ ! -e ${jq_file} ]]; then
     if [[ ${bit} == "x86_64" ]]; then
       jq_file="${file}/jq"
-      wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
+      wget --no-check-certificate "${github_link}/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
     elif [[ ${bit} == "i386" ]]; then
       jq_file="${file}/jq"
-      wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
+      wget --no-check-certificate "${github_link}/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
     else
+      # ARM fallback to package manager
       [[ ${release} == "archlinux" ]] && pacman -Sy jq --noconfirm
       [[ ${release} == "centos" ]] && yum -y install jq
       [[ ${release} == "debian" ]] && apt-get -y install jq
@@ -736,7 +745,7 @@ Install_jq() {
     echo -e "${Info} JQ解析器 已安装，继续..."
   fi
   if [[ ! -e ${region_json} ]]; then
-    wget --no-check-certificate "https://raw.githubusercontent.com/michaelwittig/node-i18n-iso-countries/master/langs/zh.json" -O ${region_json}
+    wget --no-check-certificate "${raw_link}/michaelwittig/node-i18n-iso-countries/master/langs/zh.json" -O ${region_json}
     [[ ! -e ${region_json} ]] && echo -e "${Error} ISO 3166-1 json文件下载失败，请检查！" && exit 1
   fi
 }
@@ -746,20 +755,24 @@ Install_caddy() {
   read -erp "(默认: Y 自动部署):" caddy_yn
   [[ -z "$caddy_yn" ]] && caddy_yn="y"
   if [[ "${caddy_yn}" == [Yy] ]]; then
-    if [[ ${release} == "archlinux" ]]; then
-      [[ ! -e /usr/bin/caddy ]] && {
+    caddy_file="/etc/caddy/Caddyfile" # Where is the default Caddyfile specified in Archlinux?
+    [[ ! -e /usr/bin/caddy ]] && {
+      if [[ ${release} == "debian" ]]; then
+        apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
+        curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/gpg.key" | tee /etc/apt/trusted.gpg.d/caddy-stable.asc
+        curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt" | tee /etc/apt/sources.list.d/caddy-stable.list
+        apt-get update && apt-get install caddy
+      elif [[ ${release} == "centos" ]]; then
+        yum install yum-plugin-copr -y
+        yum copr enable @caddy/caddy -y
+        yum install caddy -y
+      elif [[ ${release} == "archlinux" ]]; then
         pacman -Sy caddy --noconfirm
-        systemctl enable caddy
-      }
-      local caddy_file="/etc/caddy/conf.d/Caddyfile"
-    else
-      [[ ! -e "/usr/local/caddy/caddy" ]] && {
-        wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
-        bash caddy_install.sh install
-        rm -rf caddy_install.sh
-      }
-      local caddy_file="/usr/local/caddy/Caddyfile"
-    fi
+      fi
+      [[ ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
+      systemctl enable caddy
+      echo "" >${caddy_file}
+    }
     Set_server "server"
     Set_server_http_port
     cat >>${caddy_file} <<-EOF
@@ -769,13 +782,7 @@ http://${server_s}:${server_http_port_s} {
   file_server
 }
 EOF
-    [[ ! -e "/usr/local/caddy/caddy" && ! -e "/usr/bin/caddy" ]] && echo -e "${Error} Caddy安装失败，请手动部署，Web网页文件位置：${web_file}" && exit 1
-    if [[ ${release} == "archlinux" ]]; then
-      systemctl restart caddy
-    else
-      /etc/init.d/caddy restart
-    fi
-    echo -e "${Info} 发现 Caddy 配置文件非空，开始追加 ServerStatus 网站配置内容到文件最后..."
+    systemctl restart caddy
   else
     echo -e "${Info} 跳过 HTTP服务部署，请手动部署，Web网页文件位置：${web_file} ，如果位置改变，请注意修改服务脚本文件 /etc/init.d/status-server 中的 WEB_BIN 变量 !"
   fi
@@ -929,18 +936,12 @@ Uninstall_ServerStatus_server() {
       rm -rf "${file}"
     fi
     rm -rf "/etc/init.d/status-server"
-    if [[ -e "/etc/init.d/caddy" ]]; then
-      if [[ ${release} == "archlinux" ]]; then
-        systemctl stop caddy
-        systemctl disable caddy
-        pacman -R caddy --noconfirm
-      else
-        /etc/init.d/caddy stop
-        wget -N --no-check-certificate "${link_prefix}/caddy/caddy_install.sh"
-        chmod +x caddy_install.sh
-        bash caddy_install.sh uninstall
-        rm -rf caddy_install.sh
-      fi
+    if [[ -e "/usr/bin/caddy" ]]; then
+      systemctl stop caddy
+      systemctl disable caddy
+      [[ ${release} == "debian" ]] && apt-get purge -y caddy
+      [[ ${release} == "centos" ]] && yum -y remove caddy
+      [[ ${release} == "archlinux" ]] && pacman -R caddy --noconfirm
     fi
     if [[ ${release} == "centos" ]]; then
       chkconfig --del status-server
@@ -1210,7 +1211,7 @@ menu_server() {
 Set_Mirror() {
   echo -e "${Info} 请输入要选择的下载源，默认使用GitHub，中国大陆建议选择Coding.net，但是不建议将服务端部署在中国大陆主机上
   ${Green_font_prefix} 1.${Font_color_suffix} GitHub
-  ${Green_font_prefix} 2.${Font_color_suffix} Coding.net (服务端安装并非全部使用Coding.net仓库)"
+  ${Green_font_prefix} 2.${Font_color_suffix} Coding.net (部分资源通过 FastGit 提供服务下载, Thanks to FastGit.org for the service)"
   read -erp "请输入数字 [1-2], 默认为 1:" mirror_num
   [[ -z "${mirror_num}" ]] && mirror_num=1
   [[ ${mirror_num} == 2 ]] && link_prefix=${coding_prefix} || link_prefix=${github_prefix}

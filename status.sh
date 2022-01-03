@@ -6,7 +6,7 @@ export PATH
 #  System Required: CentOS/Debian/Ubuntu/ArchLinux
 #  Description: ServerStatus client + server
 #  Version: Test v0.4.1
-#  Author: Toyo,Modified by APTX
+#  Author: Toyo, Modified by APTX
 #=================================================
 
 sh_ver="0.4.1"
@@ -809,17 +809,6 @@ Install_ServerStatus_client() {
   Set_Mirror
   [[ -e "${client_file}/status-client.py" ]] && echo -e "${Error} 检测到 ServerStatus 客户端已安装 !" && exit 1
   check_sys
-  if [[ ${release} == "centos" ]]; then
-    if grep "6\..*" /etc/redhat-release | grep -i "centos" | grep -v "{^6}\.6" >/dev/null; then
-      echo -e "${Info} 检测到你的系统为 CentOS6，该系统自带的 Python2.6 版本过低，会导致无法运行客户端，如果你有能力升级为 Python2.7或以上版本，那么请继续(否则建议更换系统)：[y/N]"
-      read -erp "(默认: N 继续安装):" sys_centos6
-      [[ -z "$sys_centos6" ]] && sys_centos6="n"
-      if [[ "${sys_centos6}" == [Nn] ]]; then
-        echo -e "\n${Info} 已取消...\n"
-        exit 1
-      fi
-    fi
-  fi
   echo -e "${Info} 开始设置 用户配置..."
   Set_config_client
   echo -e "${Info} 开始安装/配置 依赖..."

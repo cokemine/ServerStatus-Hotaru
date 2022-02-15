@@ -171,7 +171,7 @@ Service_Server_Status_client() {
 Installation_dependency() {
   mode=$1
   if [[ ${release} == "centos" ]]; then
-    yum -y update
+    yum makecache
     yum -y install unzip
     yum -y install python3 >/dev/null 2>&1 || yum -y install python
     [[ ${mode} == "server" ]] && yum -y groupinstall "Development Tools"
@@ -641,7 +641,7 @@ Install_vnStat() {
     systemctl start vnstat
     return 0
   elif [[ ${release} == "centos" ]]; then
-    yum -y update
+    yum makecache
     yum -y install sqlite sqlite-devel
     yum -y groupinstall "Development Tools"
   elif [[ ${release} == "debian" ]]; then

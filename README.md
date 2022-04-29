@@ -77,7 +77,7 @@ chmod +x sergate
 mv sergate /usr/local/ServerStatus/server
 vim /usr/local/ServerStatus/server/config.json #修改配置文件
 #下载前端
-cd /tmp && wget https://github.com/cokemine/Hotaru_theme/releases/latest/download/hotaru-theme.zip
+cd /tmp && wget https://github.com/cokemine/hotaru_theme/releases/latest/download/hotaru-theme.zip
 unzip hotaru-theme.zip
 mv ./hotaru-theme /usr/local/ServerStatus/web #此为站点根目录，请自行设置
 nohup ./sergate --config=config.json --web-dir=/usr/local/ServerStatus/web --port=35601 > /tmp/serverstatus_server.log 2>&1 & #默认端口35601
@@ -112,7 +112,7 @@ python3 status-psutil.py
 
 ```bash
 rm -rf /usr/local/ServerStatus/web/*
-wget "https://github.com/cokemine/hotaru_theme/releases/download/latest/hotaru-theme.zip"
+wget https://github.com/cokemine/hotaru_theme/releases/latest/download/hotaru-theme.zip
 unzip hotaru-theme.zip
 mv ./hotaru-theme/* /usr/local/ServerStatus/web/
 service status-server restart

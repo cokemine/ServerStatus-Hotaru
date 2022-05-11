@@ -27,7 +27,7 @@ ServerStatus-Hotaru 将会停留在轻量级的 ServerStatus，不会再添加�
 
 如果你有以下需求：
 
-1、更低的 IO 占用
+1、服务端更低的 IO 占用
 
 2、Websocket 支持
 
@@ -41,9 +41,9 @@ ServerStatus-Hotaru 将会停留在轻量级的 ServerStatus，不会再添加�
 
 7、等等
 
-欢迎使用 NodeStatus: https://github.com/cokemine/nodestatus （请到 beta 版再实际使用）
+欢迎使用 NodeStatus: https://github.com/cokemine/nodestatus
 
-ServerStatus-Hotaru 仍会继续维护
+本项目仍会继续维护
 
 ## 安装方法
 
@@ -51,7 +51,7 @@ ServerStatus-Hotaru 仍会继续维护
 
 ```bash
 wget https://raw.githubusercontent.com/cokemine/ServerStatus-Hotaru/master/status.sh
-# wget https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/raw/master/status.sh 若服务器位于中国大陆建议选择Coding.net仓库
+# wget https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/raw/master/status.sh 若服务器位于中国大陆建议选择 Coding.net 仓库
 bash status.sh s
 ```
 
@@ -60,8 +60,6 @@ bash status.sh s
 ```
 bash status.sh c
 ```
-
-具体可见：https://www.cokemine.com/serverstatus-hotaru.html
 
 ## 手动安装服务端
 
@@ -154,7 +152,7 @@ Pirate flag: `pirate`
 
 ## 效果演示
 
-![RktuH.png](https://img.ams1.imgbed.xyz/2021/09/02/xbuk1.png)
+![](https://i.imgur.com/utfcHPV.png)
 
 ## 相关开源项目 ： 
 * ServerStatus-Toyo：https://github.com/ToyoDAdoubiBackup/ServerStatus-Toyo MIT License

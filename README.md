@@ -51,7 +51,7 @@ ServerStatus-Hotaru 将会停留在轻量级的 ServerStatus，不会再添加�
 
 ```bash
 wget https://raw.githubusercontent.com/cokemine/ServerStatus-Hotaru/master/status.sh
-# wget https://cokemine.coding.net/p/hotarunet/d/ServerStatus-Hotaru/git/raw/master/status.sh 若服务器位于中国大陆建议选择 Coding.net 仓库
+# wget https://code.gitlink.org.cn/shenmo7192/ServerStatus-Hotaru/raw/branch/master/status.sh 若服务器位于中国大陆建议选择 `gitlink` 仓库
 bash status.sh s
 ```
 

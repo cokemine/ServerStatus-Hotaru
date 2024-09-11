@@ -3,6 +3,8 @@
 
 基于 ServerStatus-Toyo 最新版本稍作修改。
 
+## 在 Onedrive 下载 [我的主题下载](https://veip-my.sharepoint.com/personal/admin_veip_onmicrosoft_com/_layouts/15/download.aspx?UniqueId=54b9f544-ba93-4b3d-8577-57ce43f4cf17&Translate=false&tempauth=v1.eyJzaXRlaWQiOiJhYTVlNDQ2Ni1jYTgyLTQ2ZTAtOGE4YS0yYmExOTUzZjA2MDEiLCJhcHBfZGlzcGxheW5hbWUiOiJPbmVNYW5hZ2VyIiwiYXBwaWQiOiI3MzRlZjkyOC1kNzRjLTQ1NTUtOGQxYi1kOTQyZmEwYTFhNDEiLCJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvdmVpcC1teS5zaGFyZXBvaW50LmNvbUAwNGZhYTllMy0zMTBiLTQwMzUtODQ4ZS1hZDQ0ZTQyOGMyMWYiLCJleHAiOiIxNzI2MDQ4MDA3In0.CgoKBHNuaWQSAjY0EgsIzOG_3ImSqT0QBRoNMjAuMTkwLjEzMi40MCosa0svVC9hbVdCZ0ZuYVl6RzZiNGVuY3BCMzIxODlWYjd1NHB5V2ZVZUZ5dz0wmgE4AUIQoU8nBeiAADCvjBvhDNIQZ0oQaGFzaGVkcHJvb2Z0b2tlbnIpMGguZnxtZW1iZXJzaGlwfDEwMDM3ZmZlYWE5YWEwN2JAbGl2ZS5jb216ATKCARIJ46n6BAsxNUARhI6tROQowh-SAQblpKflnKOaAQPlrZmiARphZG1pbkB2ZWlwLm9ubWljcm9zb2Z0LmNvbaoBEDEwMDM3RkZFQUE5QUEwN0KyAR1hbGxmaWxlcy53cml0ZSBhbGxzaXRlcy53cml0ZcgBAQ.REeQ1TOzAwHyTddCLLmKm0uynGhCb28vPsOfmBc6tGU&ApiVersion=2.0 "我的主题下载") ，替换掉 /usr/local/ServerStatus/web 目录。
+
 ## 特性
 
 服务端客户端脚本支持系统：Centos 7、Debian 8、Ubuntu 15.10 及以上、ArchLinux
@@ -136,16 +138,16 @@ Pirate flag: `pirate`
 配置文件: /usr/local/ServerStatus/server/config.json 备份并自行添加`region`
 
 ```json
-{
-   "username": "Name",
-   "password": "Password",
-   "name": "Your Servername",
-   "type": "KVM",
-   "host": "None",
-   "location": "洛杉矶",
+  {
+   "username": "用户名",
+   "password": "密码",
+   "name": "节点名字",
+   "type": "操作系统",
+   "host": "处理器型号",
+   "location": "服务器位置",
    "disabled": false,
    "region": "US"
-},
+  },
 ```
 
 替换配置文件，重启 ServerStatus
@@ -167,3 +169,4 @@ Pirate flag: `pirate`
 * caddy: https://github.com/caddyserver/caddy Apache-2.0 License
 * twemoji: https://github.com/twitter/twemoji CC-BY 4.0 License (The flag icons are designed by Twitter)
 
+7、等等
